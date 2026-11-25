@@ -14,6 +14,8 @@
   memory notes; RLS enabled as defense in depth.
 - Large-type companion screen and minimal local admin.
 - Documentation system, per-subproject docs and CLAUDE files, AGENTS manual, decision log.
+- Local end-to-end harness (`pnpm e2e`) covering text chat, guardrails, masking, Postgres, LiveKit
+  dispatch, voice greeting and web pages.
 - CI workflow and manual GHCR container publishing; API and agent Dockerfiles.
 - Part 2 roadmap (memory, scheduled ring, AWS/Terraform).
 

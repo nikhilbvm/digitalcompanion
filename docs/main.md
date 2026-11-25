@@ -38,6 +38,7 @@ links back to the root [README](../README.md).
 
 - [local-dev.md](local-dev.md) — accounts, environment, migration, run, troubleshooting
 - [agent-workflows.md](agent-workflows.md) — how agents plan, edit, verify, document, commit
+- [testing-local.md](testing-local.md) — automated backend/voice E2E and browser acceptance checklist
 - [devops.md](devops.md) — CI, image publishing, environments, Part 2 deployment design
 
 ## Subprojects

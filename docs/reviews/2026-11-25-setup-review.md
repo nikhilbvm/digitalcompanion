@@ -19,6 +19,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Database (AWS-only) | **Good** — Postgres via `pg` for local Docker/RDS; migration and Store SQL exercised in CI |
 | LLM provider | **Good** — OpenRouter default (`anthropic/claude-haiku-5.5`) with direct Anthropic fallback; live text, classifier, guardrail and voice-adapter calls verified |
 | Voice service path | **Good** — worker registered as `dc`, a live dispatch ran, and the greeting was generated through OpenRouter/Deepgram and persisted; browser/mic conversation still manual |
+| End-to-end harness | **Good** — `pnpm e2e` passes 21/21 locally (API, Postgres, OpenRouter, guardrails, masking, LiveKit dispatch, voice greeting, web pages) |
 | Build API/agent containers | **Good** — CI builds both, smoke-tests API `/health`, and confirms the agent image boots to its config check |
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
@@ -39,6 +40,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 - LiveKit: token dispatch carries `agentName: dc`; worker registered with LiveKit Cloud; a dispatched
   test job loaded Mary, generated the greeting through OpenRouter, synthesized it through Deepgram and
   persisted it. Deepgram TTS key check returned HTTP 200.
+- `pnpm e2e`: 21/21 checks passed with the full local stack running.
 - Markdown link integrity across all docs.
 - Docker install/build/deploy sequence simulated outside Docker; both Dockerfiles built by CI.
 - GitHub Actions runs on every push, including the new container-build job.

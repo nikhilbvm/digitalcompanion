@@ -179,6 +179,9 @@ pnpm verify      # all of the above
 credentials and a browser. The CI database job applies the schema and exercises the store against a
 throwaway Postgres.
 
+Full local E2E: run `pnpm dev`, then `pnpm e2e` in a second terminal, and follow
+[docs/testing-local.md](testing-local.md) for the browser checklist.
+
 Optional manual LLM check (uses your OpenRouter key, one tiny call):
 
 ```bash

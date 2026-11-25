@@ -124,7 +124,7 @@ Browser (Next.js, Capacitor-ready)
   [Part 1 checklist](docs/planning/01-part1-checklist.md) ·
   [Part 2 roadmap](docs/planning/02-part2-roadmap.md)
 - **DevOps:** [docs/devops.md](docs/devops.md) · [devops/README.md](devops/README.md)
-- **Local dev:** [docs/local-dev.md](docs/local-dev.md)
+- **Local dev:** [docs/local-dev.md](docs/local-dev.md) · [testing](docs/testing-local.md)
 - **Agent workflows:** [docs/agent-workflows.md](docs/agent-workflows.md)
 - **Review:** [docs/reviews/2026-11-25-setup-review.md](docs/reviews/2026-11-25-setup-review.md) —
   local/cloud readiness, fixed defects and remaining deployment gaps

@@ -55,6 +55,7 @@ pnpm dev              # web + api + agent
 pnpm lint
 pnpm typecheck
 pnpm test             # core guardrail/text tests
+pnpm e2e              # backend+voice E2E (requires pnpm dev running)
 pnpm build            # api, agent, web
 pnpm check:secrets    # tracked-file secret scan
 pnpm verify           # secret scan + all of the above, in order

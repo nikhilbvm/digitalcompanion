@@ -21,7 +21,8 @@
     "db:down": "docker compose down",
     "db:migrate": "bash scripts/db-migrate.sh",
     "db:seed": "bash scripts/db-seed.sh",
-    "check:secrets": "bash scripts/check-secrets.sh"
+    "check:secrets": "bash scripts/check-secrets.sh",
+    "e2e": "pnpm --filter @companion/api exec tsx scripts/e2e-local.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
