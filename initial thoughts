@@ -1,0 +1,120 @@
+# Prompt: Companion POC, Part 1 (minimal working pipeline)
+
+Copy everything below the line into Claude Code (or your AI coding tool) inside an empty GitHub repo.
+
+---
+
+You are setting up the first, minimal version of an AI companion app for older adults in the US. Build a working end-to-end pipeline that runs locally first. Do not build deployment or Terraform yet (that is Part 2), but keep the structure ready for it.
+
+## Goal of Part 1
+
+A person opens a very simple web app and either:
+- taps **Talk now** and has a real-time voice conversation with the AI companion, or
+- taps **Chat now** and types (large text) to the same companion.
+
+Every turn passes through a light **input guardrail**, the LLM, and a light **output guardrail**. Conversations are saved so we can review them.
+
+## Tech stack (use exactly this unless something is impossible; if so, stop and tell me)
+
+- Language: **TypeScript everywhere**, Node 22 LTS, pnpm workspaces monorepo.
+- `apps/web`: **Next.js (App Router) + Tailwind**. Later it will be wrapped with Capacitor, so avoid server-only Next features in the UI; keep it client-friendly.
+- `apps/api`: **Express** server for text chat, LiveKit access tokens, and saving data. Write handlers so they can later run on AWS Lambda behind API Gateway (keep app creation separate from `listen()`).
+- `apps/agent`: **LiveKit Agents for Node.js (agents-js)** voice agent using:
+  - Speech to text: **Deepgram** (Nova-3, or Flux if the plugin supports it) via the LiveKit Deepgram plugin.
+  - LLM: **Anthropic Claude Haiku 5.5** (model id `claude-haiku-5-5`).
+  - Text to speech: **Deepgram Aura-2** via the LiveKit Deepgram plugin.
+  - Voice activity detection / turn detection as recommended in the current LiveKit Agents JS docs.
+  - Media goes through **LiveKit Cloud** (free Build plan).
+- `packages/core`: shared code used by both api and agent: persona and system prompt, guardrails, types, Supabase client, memory helpers.
+- Database: **Supabase** (Postgres). Use the Supabase JS client with the service role key on the server only.
+- LLM calls in `apps/api` use the official **Anthropic TypeScript SDK** (`@anthropic-ai/sdk`) with streaming.
+
+Before writing integration code, read the current official docs for LiveKit Agents JS (and its Deepgram and Anthropic plugins), the Deepgram JS SDK, the Anthropic TypeScript SDK, and Supabase JS. Do not guess APIs. If the LiveKit Anthropic plugin cannot use `claude-haiku-5-5`, write a small custom LLM adapter that calls the Anthropic SDK directly.
+
+### Anthropic API notes for Claude Haiku 5.5
+- Do not send `temperature`, `top_p` or `top_k` (rejected by the current API).
+- No assistant prefill.
+- Set `output_config: { effort: "low" }` for fast chat replies.
+- Always check `stop_reason` (including `"refusal"`) before using the content; on a refusal, reply with a gentle fallback line.
+- Use prompt caching on the fixed system prompt (`cache_control` on the persona block) to keep costs down.
+
+## Environment variables (create `.env.example` files, never commit real keys)
+
+```
+ANTHROPIC_API_KEY=
+DEEPGRAM_API_KEY=
+LIVEKIT_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+NEXT_PUBLIC_LIVEKIT_URL=
+```
+
+## Features to build
+
+### 1. Web app (`apps/web`)
+- One screen for the older adult. Very large type (at least 24px body), high contrast, no menus.
+- Two big buttons: **Talk now** and **Chat now**, plus an **End** button during a conversation.
+- For the POC, a simple person picker at the top (dropdown of test people from the database) instead of real login.
+- **Talk now**: request mic permission, fetch a LiveKit token from the API, join a room, and show a simple "Listening..." / "Speaking..." state and a live transcript in large text.
+- **Chat now**: large text box, a send button, a microphone key using the browser's built-in dictation if available, streaming replies shown in large text. Optional "Read aloud" button per reply.
+- A tiny `/admin` page (no styling needed) to create a test person (name, preferred name, interests, topics to avoid, care notes) and view saved conversations and guardrail flags.
+
+### 2. API (`apps/api`)
+- `POST /chat` (streams the reply as server-sent events): input guardrail, then Haiku with the persona prompt plus the person's profile, then output guardrail, then save both turns.
+- `POST /livekit/token`: returns a LiveKit access token for a room named per conversation, with the person id in metadata so the agent can load the profile.
+- `GET/POST /people`, `GET /conversations`, `GET /conversations/:id` for the admin page.
+- Health check `GET /health`.
+
+### 3. Voice agent (`apps/agent`)
+- Joins rooms, loads the person's profile from Supabase using the metadata.
+- Greets the person by preferred name, then converses using the same persona and guardrails as the API (import from `packages/core`).
+- Runs the input guardrail on each final transcript and the output guardrail on each sentence before it is spoken.
+- Saves each turn (role, text, timestamps) and any guardrail flags.
+- Supports interruptions (if the person speaks, stop speaking).
+
+### 4. Persona and system prompt (`packages/core/persona.ts`)
+Write a system prompt for the companion with these rules:
+- Warm, patient, curious companion for an older adult; it is openly an AI, has no human name, and introduces itself as "your companion".
+- Short replies (1 to 3 sentences in voice), one question at a time, plain words, listens more than it talks.
+- Follows the person's lead; offers light content by interest (a news-style chat, a short story, a joke, trivia, a memory question) when there is a lull.
+- Never asks for or accepts money, bank or card details, passwords, one-time codes, Social Security or Medicare numbers.
+- Never gives medical, legal or financial advice; suggests asking their doctor or family.
+- Never pretends to be human, a relative, a doctor, a bank or an official. If asked "are you real?", says: "I'm an AI companion your family set up. I'm not a person, but I enjoy hearing your stories."
+- Never encourages dependence; gently encourages contact with family and friends.
+- Avoids topics on the person's do-not-mention list; neutral on politics and religion.
+- In an emergency (fall and can't get up, chest pain, trouble breathing, stroke signs, thoughts of self-harm) tells them to call 911 now, or 988 for suicidal thoughts, and says it is not an emergency service.
+
+The profile (preferred name, interests, care notes, topics to avoid) is injected as a separate block after the fixed persona so the persona stays cacheable.
+
+### 5. Guardrails (`packages/core/guardrails.ts`), light version
+Input guardrail, run on every user message or final transcript:
+1. Fast pattern checks: credit card numbers (Luhn), SSN pattern, 4 to 8 digit one-time codes near words like "code" or "OTP", phrases such as "gift card", "wire money", "bitcoin", "grandson in jail", "IRS", "Medicare number".
+2. A small Claude Haiku 5.5 classification call with structured output returning `{ category: "none" | "emergency" | "self_harm" | "scam" | "abuse" | "medical_question" | "distress", confidence: number }`. Run it in parallel with the main reply to avoid extra delay.
+3. If a pattern or category is hit: add a one-line safety instruction for that turn (for example the scam reminder or 911 guidance), never repeat sensitive numbers back, mask them before saving, and record a flag.
+
+Output guardrail, run on each reply (per sentence in voice):
+- Block or replace sentences that ask for money, codes or personal identifiers; give dosage or diagnosis advice; claim to be human; or tell the person to send, buy, invest or sign anything. Replace with a safe line such as "Let's talk about something else."
+- Record a flag whenever something is replaced.
+
+Write unit tests (Vitest) for the pattern checks and the output filter with at least 15 example inputs.
+
+### 6. Database (Supabase SQL migration in `supabase/migrations`)
+Tables: `people` (id, name, preferred_name, interests text[], avoid_topics text[], care_notes, created_at), `conversations` (id, person_id, mode 'voice'|'text', started_at, ended_at), `messages` (id, conversation_id, role 'user'|'assistant', text, created_at), `guardrail_flags` (id, conversation_id, message_id, stage 'input'|'output', category, detail, created_at), `memory_notes` (id, person_id, text, type, source, sensitivity, created_at, expires_at, active) (created now, used in Part 2).
+
+## Developer experience
+- Root scripts: `pnpm dev` runs web, api and agent together; `pnpm test`; `pnpm lint`; `pnpm typecheck`.
+- A `README.md` with setup steps: create LiveKit Cloud, Deepgram, Anthropic and Supabase accounts, fill `.env`, run the migration, `pnpm dev`, open the app.
+- Each app has a `Dockerfile` (agent and api) ready for AWS later.
+- Log each turn's latency (speech end to first audio out) to the console so we can tune it.
+
+## Definition of done for Part 1
+- I can create a test person in `/admin`, pick them on the main screen, and hold a 5-minute voice conversation and a text chat that greet them by name and use their interests.
+- Typing "my bank asked for my card number 4111 1111 1111 1111" produces a scam-safety reply, the number is masked in the database, and a flag appears in `/admin`.
+- Saying "I fell and can't get up" produces 911 guidance and a flag.
+- Asking "are you a real person?" gets the honest AI answer.
+- All tests, lint and typecheck pass.
+
+Work in small commits. After setup, give me a short summary of what was built, how to run it, anything you could not verify, and what Part 2 (memory capture, scheduled ring, Terraform deployment to AWS) will need.

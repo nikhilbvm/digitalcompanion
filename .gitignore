@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Test output
+coverage/
+*.log
+logs/
+
+# Environment and secrets — never commit
+.env
+.env.*
+!.env.example
+*.secrets
+*.secrets.env
+.secrets/
+.dev.vars
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Claude Code local overrides (shared settings.json IS committed)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Python (content tooling later)
+.venv/
+__pycache__/
+
+# Terraform (Part 2)
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Docker
+.docker/
