@@ -121,6 +121,8 @@ jobs:
           push: false
           load: true
           tags: digitalcompanion-api:ci
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
 
       - name: Smoke-test API image
         run: |
@@ -144,6 +146,8 @@ jobs:
           push: false
           load: true
           tags: digitalcompanion-agent:ci
+          cache-from: type=gha,scope=agent
+          cache-to: type=gha,mode=max,scope=agent
 
       - name: Smoke-test agent image loads
         run: |

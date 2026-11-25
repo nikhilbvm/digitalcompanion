@@ -25,6 +25,23 @@ docker build -f apps/agent/Dockerfile -t digitalcompanion-agent .
 
 ---
 
+### Why CI builds the images, and what it does not do
+
+Docker images are the **deployable artifacts** for ECS Fargate. CI builds both on every push to catch
+breakage that `pnpm build` alone cannot: missing production dependencies after `pnpm deploy --prod`,
+`.dockerignore` mistakes, native modules (agent), runtime CMD/permissions, and the bundled core
+package. It does **not** push anything; `docker-publish.yml` is the manual publish step.
+
+Local development does **not** use these images. `pnpm dev` runs Next, tsx and the LiveKit worker
+directly; Docker is only used for the local Postgres service. Building images locally is optional
+(`docker build -f apps/api/Dockerfile .`) and is only needed to test container parity or prepare a
+cloud release. CI uses GitHub Actions layer cache (`scope=api` / `scope=agent`), so unchanged layers
+are reused after the first run.
+
+If CI time becomes a constraint, the next step is path-filtering the Docker job (Dockerfiles, lockfile,
+package manifests, `packages/core`, `apps/api`, `apps/agent`) rather than removing it; deployment
+should still build from the exact commit being released.
+
 ## 2. Versioning and artifacts
 
 - **Conventional commits** determine intent; Part 1 does not run semantic-release yet.
