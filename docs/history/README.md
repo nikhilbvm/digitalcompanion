@@ -19,6 +19,7 @@ carry well.
 ## Files
 
 - [decision-log.md](decision-log.md) — ADR-lite entries, newest first.
+- [2026-11-25-part1-build.md](2026-11-25-part1-build.md) — Part 1 build session and verification.
 - [../planning/01-part1-checklist.md](../planning/01-part1-checklist.md) — task status.
 - [../../CHANGELOG.md](../../CHANGELOG.md) — user-visible changes.
 
