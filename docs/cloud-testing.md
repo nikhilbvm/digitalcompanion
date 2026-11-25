@@ -174,6 +174,21 @@ ARM Fargate saves ~$3.60/month; a larger agent task (0.5 vCPU/1 GB) adds ~$9/mon
 logs and NAT data move it toward the earlier $100–150 upper bound. **$20–25 is not achievable with
 ALB + NAT + two Fargate tasks.**
 
+### Do we need RDS for the first cloud test?
+
+**Not necessarily.** RDS is the managed production database, but for a temporary cloud E2E the
+Postgres container can run on the same EC2 dev host:
+
+- `DATABASE_URL=postgres://...@127.0.0.1:5432/digitalcompanion`
+- keep port 5432 bound to localhost/private network, never the public internet
+- back up with EBS snapshots or `pg_dump` to S3
+- when real family data/backups matter, migrate to RDS (`pg_dump`/`pg_restore`) and change
+  `DATABASE_URL`; no application code changes
+
+This removes ~$14/month and is the right first cloud step. The database is still required — it stores
+people, conversations, messages, guardrail flags and (Part 2) memory notes; without it there is no
+admin history, guardrail review, or voice profile load. It is not just preferences.
+
 ### B. Lean cloud dev (to hit ~$20–35)
 
 One **EC2 `t4g.small`** in a public subnet running Docker Compose (API + agent) behind Caddy for TLS,
@@ -184,9 +199,10 @@ plus private RDS, S3/CloudFront web, and SSM/Secrets Manager:
 | EC2 `t4g.small` | $12.26 | Spot ≈ $5.84, interruption risk |
 | 20 GB EBS gp3 | $1.60 | |
 | Public IPv4 | $3.65 | |
-| RDS `db.t4g.micro` + 20 GB gp3 | $13.98 | may be $0 on a new-account 12-month free tier |
+| RDS `db.t4g.micro` + 20 GB gp3 | $13.98 | optional; may be $0 on a new-account 12-month free tier |
 | Route 53 / S3 / CloudFront / secrets | ~$2–3 | |
-| **Total** | **~$34 on-demand** | **~$27 Spot**, **~$14–20 with RDS free tier** |
+| **Total with RDS** | **~$34 on-demand** | **~$27 Spot**, **~$14–20 with RDS free tier** |
+| **Total without RDS** (Postgres in Docker on EC2) | **~$20 on-demand** | **~$13 Spot** |
 
 Trade-offs: no ALB/NAT, one host, API and agent share CPU/memory, manual security patching, and only
 the API is exposed (Caddy handles TLS). It is a good **temporary cloud E2E** profile, not the
