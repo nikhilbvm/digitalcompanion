@@ -151,17 +151,68 @@ with RDS access or add a cloud-only API-level E2E variant.
 
 ---
 
-## 8. Rough cost (dev, always-on)
+## 8. Cost — corrected breakdown (us-east-1, 730 h/month)
 
-Expect roughly **$80–150/month** in `us-east-1` for one small dev stack:
+The earlier **$80–150/month** estimate was for the **production-shaped** architecture (ALB + NAT + two
+Fargate services + RDS). A **$20–25/month** dev stack is possible only with a lean topology or
+free-tier/Spot credits. AWS on-demand prices below are from the current public pricing pages; API
+usage (OpenRouter/Deepgram/LiveKit) is separate.
 
-- NAT gateway + data
-- ALB
-- two small Fargate tasks (API + agent)
-- RDS `db.t4g.micro`/small
-- Secrets Manager, CloudWatch, S3/CloudFront (pennies at POC traffic)
+### A. Production-shaped dev stack (as designed)
 
-Stop or scale down tasks when not testing. Aurora Serverless v2 costs more at idle minimums.
+| Item | Monthly |
+|---|---:|
+| 2 × Fargate x86 tasks, 0.25 vCPU / 0.5 GB | $18.02 |
+| RDS `db.t4g.micro` single-AZ + 20 GB gp3 | $13.98 |
+| ALB base ($0.0225/h) + ~1 LCU | ~$22.27 |
+| NAT gateway ($0.045/h) + a little data | ~$35 |
+| Secrets Manager (4 secrets) | $1.60 |
+| ECR + S3/CloudFront + CloudWatch | ~$3 |
+| **Total** | **~$92–95/mo** |
+
+ARM Fargate saves ~$3.60/month; a larger agent task (0.5 vCPU/1 GB) adds ~$9/month. More traffic,
+logs and NAT data move it toward the earlier $100–150 upper bound. **$20–25 is not achievable with
+ALB + NAT + two Fargate tasks.**
+
+### B. Lean cloud dev (to hit ~$20–35)
+
+One **EC2 `t4g.small`** in a public subnet running Docker Compose (API + agent) behind Caddy for TLS,
+plus private RDS, S3/CloudFront web, and SSM/Secrets Manager:
+
+| Item | On-demand | Notes |
+|---|---:|---|
+| EC2 `t4g.small` | $12.26 | Spot ≈ $5.84, interruption risk |
+| 20 GB EBS gp3 | $1.60 | |
+| Public IPv4 | $3.65 | |
+| RDS `db.t4g.micro` + 20 GB gp3 | $13.98 | may be $0 on a new-account 12-month free tier |
+| Route 53 / S3 / CloudFront / secrets | ~$2–3 | |
+| **Total** | **~$34 on-demand** | **~$27 Spot**, **~$14–20 with RDS free tier** |
+
+Trade-offs: no ALB/NAT, one host, API and agent share CPU/memory, manual security patching, and only
+the API is exposed (Caddy handles TLS). It is a good **temporary cloud E2E** profile, not the
+production shape.
+
+### C. Single Fargate task with two containers
+
+One 0.5 vCPU / 1 GB task (API + agent containers) in a public subnet, no ALB/NAT, plus RDS and S3:
+
+- ARM Fargate ≈ $14.42/month (x86 ≈ $18.02)
+- Public IPv4 $3.65, RDS $13.98, misc ~$3 → **~$35–39 on-demand**
+- With RDS free tier and Fargate Spot: **~$22–30**, but Spot interruptions and public-endpoint/TLS
+  handling make it less predictable than the EC2 option.
+
+### D. Free tier / credits
+
+A new AWS account may cover 750 h of `db.t4g.micro` RDS, some EC2 hours, S3/CloudFront and Lambda
+free tiers for 12 months. Fargate, NAT gateways and ALBs have no free tier. Do not build a budget on
+free-tier eligibility without checking the account.
+
+### Other notes
+
+- Aurora Serverless v2 has a higher idle minimum than `db.t4g.micro`; use it only when needed.
+- Stop/scale down the dev stack when not testing. RDS can be stopped temporarily, but it restarts
+  automatically after 7 days.
+- OpenRouter/Deepgram/LiveKit usage is billed separately and is small for POC testing, but not $0.
 
 ---
 
