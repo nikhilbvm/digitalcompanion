@@ -71,6 +71,16 @@ export function filterLlmStream(
   return new ReadableStream<ChatChunk | string>({
     async start(controller) {
       let lastId = 'filtered';
+      let finalized = false;
+
+      const finish = async (): Promise<void> => {
+        if (finalized) return;
+        finalized = true;
+        if (parts.length > 0) {
+          await onComplete(parts.join(' ').trim(), flags);
+        }
+      };
+
       try {
         for (;;) {
           const { done, value } = await reader.read();
@@ -109,12 +119,12 @@ export function filterLlmStream(
           }
         }
 
-        if (parts.length > 0) {
-          await onComplete(parts.join(' ').trim(), flags);
-        }
-        controller.close();
+        await finish();
+        if (controller.desiredSize !== null) controller.close();
       } catch (error) {
-        controller.error(error);
+        // A barge-in aborts the source stream; keep whatever was already safe.
+        await finish();
+        if (controller.desiredSize !== null) controller.error(error);
       }
     },
     cancel(reason) {
