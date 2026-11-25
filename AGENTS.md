@@ -56,7 +56,8 @@ pnpm lint
 pnpm typecheck
 pnpm test             # core guardrail/text tests
 pnpm build            # api, agent, web
-pnpm verify           # all of the above, in order
+pnpm check:secrets    # tracked-file secret scan
+pnpm verify           # secret scan + all of the above, in order
 ```
 
 Never commit `.env`, `.env.*` (except `.env.example`), `.secrets*`, `dist/`, `.next/`, or

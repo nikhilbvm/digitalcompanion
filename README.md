@@ -95,7 +95,8 @@ Full setup, account creation and troubleshooting: [docs/local-dev.md](docs/local
 | `pnpm lint` | ESLint across the repo |
 | `pnpm typecheck` | TypeScript across every package |
 | `pnpm test` | Vitest guardrail + text tests |
-| `pnpm verify` | lint → typecheck → test → build |
+| `pnpm check:secrets` | scans tracked files for live API keys |
+| `pnpm verify` | secret scan → lint → typecheck → test → build |
 
 ---
 

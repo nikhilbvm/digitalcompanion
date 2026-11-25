@@ -3,6 +3,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+echo "==> secret scan"
+bash scripts/check-secrets.sh
+
 echo "==> lint"
 pnpm lint
 

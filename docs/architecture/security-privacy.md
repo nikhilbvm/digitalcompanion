@@ -37,6 +37,12 @@ Rules:
 - `.env`, `.env.*` (except `.env.example`), `.secrets*` are gitignored.
 - Never put `DATABASE_URL` or any DB credential in a `NEXT_PUBLIC_*` variable or client component.
 - Never log a key, token, transcript, care note or identifier.
+- **Never paste a real key into `.env.example`** or any tracked file. `pnpm check:secrets` runs in CI
+  and `pnpm verify`. If a key is ever committed, rotate it immediately; removing the line is not enough
+  because git history retains it.
+- A Deepgram key was accidentally committed to `.env.example` on 2026-11-25. It has been removed from
+  the working tree; **it must be revoked/rotated in Deepgram**, and the new value kept only in `.env`
+  or the secret manager.
 - CI in Part 1 needs no application secrets (lint/typecheck/test/build only). Docker publishing uses
   `GITHUB_TOKEN`.
 - Part 2 stores the same names in AWS Secrets Manager and GitHub Environment secrets; no secret is
