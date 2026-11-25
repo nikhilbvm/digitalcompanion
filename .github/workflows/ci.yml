@@ -86,4 +86,17 @@ jobs:
           context: .
           file: apps/agent/Dockerfile
           push: false
+          load: true
           tags: digitalcompanion-agent:ci
+
+      - name: Smoke-test agent image loads
+        run: |
+          set +e
+          output=$(docker run --rm digitalcompanion-agent:ci 2>&1)
+          status=$?
+          echo "$output"
+          echo "exit=$status"
+          # With no env it must reach our own config check, not crash on a
+          # missing native module or a broken bundle.
+          if [ "$status" -eq 0 ]; then exit 1; fi
+          echo "$output" | grep -q "missing environment variables" || exit 1

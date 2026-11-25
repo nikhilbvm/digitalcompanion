@@ -10,7 +10,7 @@ versions, no secrets in git, and deployment state recorded in git tags.**
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR + push to `main` | pnpm install, lint, typecheck, test, build |
+| [`ci.yml`](../.github/workflows/ci.yml) | PR + push to `main` | pnpm install, lint, typecheck, test, build, container builds, API `/health` smoke |
 | [`docker-publish.yml`](../.github/workflows/docker-publish.yml) | manual | build API or agent image, push to GHCR |
 
 CI needs no application secrets. Docker publishing uses `GITHUB_TOKEN` with `packages: write`.

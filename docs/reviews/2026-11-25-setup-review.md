@@ -16,7 +16,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Monorepo structure and package boundaries | **Good** — pnpm workspaces, one-way dependencies, apps bundle core |
 | Run all apps locally | **Good** — verified web/api/agent start paths; real voice needs keys |
 | Build all apps in CI | **Good** — lint, typecheck, 66 tests, Next/tsup builds |
-| Build API/agent containers | **Good** — CI builds both images on every push |
+| Build API/agent containers | **Good** — CI builds both images and smoke-tests API `/health` on every push |
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
 | Public production readiness | **Not ready** — no auth, rate limits, retention, audit, escalation |
@@ -39,7 +39,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | The web app did not read the root `.env` | `NEXT_PUBLIC_*` overrides (e.g. a non-default API port) were ignored locally | `apps/web/next.config.ts` loads the root `.env` with dotenv; verified by building with a test value and finding it in `.next` |
 | API only read `API_PORT` | Cloud runtimes that inject `PORT` would bind the wrong port | `apps/api/src/config.ts` falls back to `PORT`; verified on port 4100 |
 | Dockerfiles relied on corepack auto-resolution | Less deterministic builds | `corepack prepare pnpm@10.34.9 --activate` in both Dockerfiles |
-| CI never built the Dockerfiles | Container regressions could ship unnoticed | New `docker` job builds API and agent images on every push; both pass |
+| CI never built the Dockerfiles | Container regressions could ship unnoticed | New `docker` job builds API and agent images and starts the API container to check `/health`; both pass |
 | Cloud runtime assumptions were under-documented | Hosting mistakes likely | Added cloud runtime notes to [docs/devops.md](../devops.md) and the env contract |
 
 ## Remaining gaps before a cloud deployment
