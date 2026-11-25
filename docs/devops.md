@@ -32,7 +32,7 @@ docker build -f apps/agent/Dockerfile -t digitalcompanion-agent .
 - Deploy tracking tags are reserved for Part 2:
   `deploy/{env}/{component}/v{version}` (e.g. `deploy/prod/api/v0.1.0`).
 - Artifacts: container images in GHCR (api, agent). Web is built from source by the hosting provider
-  (Vercel or static hosting) rather than stored as a long-lived binary.
+  (static S3 + CloudFront export) rather than stored as a long-lived binary.
 - Rollback = redeploy the previous version/tag; no separate rollback pipeline is required.
 
 ---
@@ -58,7 +58,7 @@ Same variable contract as [`.env.example`](../.env.example). See
 
 | Component | Target | Why |
 |---|---|---|
-| Web (`apps/web`) | **Vercel** | Preview deploys and zero web infrastructure; Capacitor works with the same client build. S3 + CloudFront is the all-AWS alternative. |
+| Web (`apps/web`) | **AWS S3 + CloudFront** | The UI is client-only, so it builds to a static `out/` directory; CloudFront serves it with TLS and caching. AWS Amplify Hosting is an alternative if preview builds are needed. |
 | API (`apps/api`) | **AWS ECS Fargate** | Normal container, long-lived; `createApp()` also allows Lambda/API Gateway later. |
 | Voice agent (`apps/agent`) | **AWS ECS Fargate** | Long-lived worker with native modules; outbound to LiveKit only, no inbound listener. |
 | Database | **Supabase** | Managed Postgres, backups, RLS. |
@@ -66,9 +66,9 @@ Same variable contract as [`.env.example`](../.env.example). See
 | LLM / STT / TTS | **Anthropic / Deepgram** | Managed APIs. |
 | Secrets | AWS Secrets Manager + GitHub Environments (Part 2) | No secrets in git. |
 
-If a single-cloud AWS posture is required, replace Vercel with S3 + CloudFront. Set
-`NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` in the web host's **build** environment; they
-are inlined at build time.
+Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` in the web **build** environment; they
+are inlined at build time. Upload the resulting `apps/web/out/` directory to S3 and invalidate
+CloudFront.
 
 ```
 GitHub Actions (OIDC → AWS role, no static keys)
@@ -89,7 +89,7 @@ AWS
   └── S3: optional exports/backups
 
 Managed: Supabase Postgres · LiveKit Cloud · Anthropic · Deepgram
-Web: Vercel or S3 + CloudFront; Capacitor wrapper later
+Web: S3 + CloudFront (static Next export); Capacitor wrapper later
 ```
 
 ### Why ECS Fargate for the agent
@@ -108,6 +108,22 @@ API Gateway remains an option because `createApp()` is separate from `listen()`.
   Local development loads the root `.env` via dotenv.
 - Docker image builds are validated in CI on every push. Deployment is still manual (and not
   implemented until Part 2).
+
+### Web deployment (S3 + CloudFront)
+
+```bash
+pnpm --filter @companion/web build          # → apps/web/out (static export)
+aws s3 sync apps/web/out s3://<bucket> --delete
+aws cloudfront create-invalidation --distribution-id <id> --paths '/*'
+```
+
+- The app uses `trailingSlash: true`, so every route is a directory with `index.html`. Configure the
+  CloudFront origin as the **S3 website endpoint** (which resolves index documents), or add a
+  CloudFront Function that appends `index.html` to directory/extensionless requests.
+- Default root object: `index.html`. Optional custom error response: 404 → `/404.html`.
+- Cache HTML briefly (`no-cache` or a short TTL) and hashed `/_next/static/*` assets aggressively.
+- Build with `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` set; they are inlined.
+- No server is required; do not put the Supabase service role key in this build environment.
 
 ### Terraform layout (placeholder)
 
@@ -174,8 +190,7 @@ Part 1 logs structured JSON to stdout (`chat_turn`, `voice_turn`) without messag
 ## 8. Open decisions
 
 1. API runtime: ECS Fargate vs Lambda/API Gateway. Default: Fargate for parity with the agent.
-2. Web hosting: **decided default = Vercel** until Capacitor. Revisit S3 + CloudFront if a
-   single-cloud AWS posture is required. API/agent stay on AWS ECS Fargate.
+2. Web hosting: **decided = S3 + CloudFront static export**. API/agent stay on AWS ECS Fargate.
 3. Terraform state backend: S3+DynamoDB, one state per env.
 4. Image registry: GHCR for Part 1, ECR for Part 2.
 5. Release automation: semantic-release vs manual tags. Default: manual tag for the POC, revisit when

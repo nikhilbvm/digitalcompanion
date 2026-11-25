@@ -563,7 +563,7 @@ Part 2 (designed, not built):
   Gateway, Secrets Manager, CloudWatch, S3. Supabase and LiveKit Cloud stay managed.
 - GitHub OIDC → AWS role, no long-lived keys. Environments `dev` and `prod` with approval gate on
   `prod`.
-- Web: Vercel or CloudFront/S3; Capacitor wrapper later.
+- Web: S3 + CloudFront static Next export; Capacitor wrapper later.
 - One deployment workflow per component, manual dispatch + version input, same pattern as the
   reference project.
 

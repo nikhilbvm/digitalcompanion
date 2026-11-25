@@ -14,6 +14,11 @@ dotenv.config({ path: path.resolve(here, '.env.local'), override: true, quiet: t
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@companion/core'],
+  // AWS-only hosting: the UI is client-only, so export static files for
+  // S3 + CloudFront. `pnpm dev` still uses the Next dev server.
+  output: 'export',
+  trailingSlash: true,
+  images: { unoptimized: true },
 };
 
 export default nextConfig;

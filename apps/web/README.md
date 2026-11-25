@@ -6,10 +6,14 @@ Client-side only for product features; no API keys and no Supabase access.
 ## Commands
 
 ```bash
-pnpm --filter @companion/web dev        # http://localhost:3000
-pnpm --filter @companion/web build
+pnpm --filter @companion/web dev        # Next dev server, http://localhost:3000
+pnpm --filter @companion/web build      # static export → apps/web/out
+pnpm --filter @companion/web start      # serve the static export locally
 pnpm --filter @companion/web typecheck
 ```
+
+The UI is client-only and builds with `output: 'export'` for AWS S3 + CloudFront. `next start` is not
+used; `start` serves `out/` with `serve`.
 
 ## Environment
 

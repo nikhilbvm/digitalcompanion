@@ -51,8 +51,8 @@ These are intentional Part 2 items, not bugs in Part 1:
 2. **No Terraform yet.** `devops/terraform/` is a README-only placeholder with the planned modules.
 3. **No migration automation.** Apply `supabase/migrations/0001_init.sql` manually until a migration
    job exists.
-4. **No web container.** The documented host is Vercel (or S3 + CloudFront); `NEXT_PUBLIC_*` must be
-   set in the hosting build environment. Local builds load the root `.env`.
+4. **No web container.** The web app is a static Next export for S3 + CloudFront; `NEXT_PUBLIC_*`
+   must be set in the build environment. Local builds load the root `.env`.
 5. **No auth, rate limits, audit log, retention, or human escalation.** Do not expose the POC
    publicly. See [security-privacy.md](../architecture/security-privacy.md).
 6. **No API/web integration tests.** Guardrails and the voice stream filter are unit-tested; the
@@ -95,7 +95,8 @@ docker run --rm --env-file .env companion-agent
 
 - Build with `NEXT_PUBLIC_API_BASE_URL` pointing at the deployed API and `NEXT_PUBLIC_LIVEKIT_URL` at
   the LiveKit project; these are inlined at build time.
-- Host on Vercel (recommended until Capacitor) or S3 + CloudFront for a static/standalone build.
+- `pnpm --filter @companion/web build` writes `apps/web/out/`; upload it to S3 behind CloudFront.
+  The app uses `trailingSlash: true`, so routes map to `index.html` directories.
 - The UI is client-only and does not hold server secrets.
 
 ### Database and LiveKit

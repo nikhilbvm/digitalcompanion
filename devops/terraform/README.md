@@ -12,6 +12,7 @@ terraform/
 │   ├── ecr/            # repositories + lifecycle policy
 │   ├── ecs-api/        # cluster, task definition, service, ALB/API Gateway
 │   ├── ecs-agent/      # LiveKit worker task + service (no inbound)
+│   ├── web/            # S3 bucket, CloudFront, index rewrite, invalidation
 │   ├── secrets/        # Secrets Manager entries
 │   ├── observability/  # CloudWatch log groups, alarms, dashboard
 │   └── iam/            # task roles, GitHub OIDC deploy role
@@ -39,8 +40,9 @@ terraform/
 2. Run the database migration (Supabase CLI/psql) with a dedicated credential.
 3. Update the ECS API service and wait for stability.
 4. Update the ECS agent service.
-5. Smoke test /health (ok + configured) through the load balancer.
-6. Tag deploy/{env}/{component}/v{version}; record the release.
+5. Build the web static export and `aws s3 sync` it to the bucket; invalidate CloudFront.
+6. Smoke test /health (ok + configured) through the load balancer.
+7. Tag deploy/{env}/{component}/v{version}; record the release.
 ```
 
 Rollback: deploy the previous image tag; migrations stay backward-compatible for one release.
@@ -48,7 +50,7 @@ Rollback: deploy the previous image tag; migrations stay backward-compatible for
 ## Before writing code
 
 - Decide API runtime: ECS Fargate (default) vs Lambda + API Gateway.
-- Decide web hosting: Vercel until Capacitor, then S3 + CloudFront.
+- Web hosting: S3 + CloudFront static export (decided); add an S3/CloudFront module.
 - Confirm Supabase/LiveKit production projects and secret rotation policy.
 - Read [docs/devops.md](../../docs/devops.md) and
   [docs/planning/02-part2-roadmap.md](../../docs/planning/02-part2-roadmap.md).

@@ -4,18 +4,22 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
-## 2026-11-25 — Hosting split: Vercel web, AWS API/agent
+## 2026-11-25 — AWS-only hosting
 
-**Decision:** The web app deploys to Vercel by default; the API and voice agent deploy to AWS (ECR +
-ECS Fargate, with Lambda/API Gateway kept open for the API). Supabase, LiveKit Cloud, Anthropic and
-Deepgram remain managed services.
+**Decision:** Host all app compute on AWS. The web app builds to a static Next export and deploys to
+S3 + CloudFront; the API and voice agent deploy to ECR + ECS Fargate (Lambda/API Gateway remains an
+option for the API). AWS Amplify Hosting is a fallback if managed preview builds are wanted.
+Supabase, LiveKit Cloud, Anthropic and Deepgram remain managed external services.
 
-**Context:** Vercel gives preview deployments and zero web infrastructure work, while the agent is a
-long-lived worker with native modules and the API needs a normal container. A single-cloud S3 +
-CloudFront option exists if that becomes a requirement.
+**Context:** Nikhil chose AWS-only hosting to keep infrastructure and billing in one cloud. The web
+UI is client-only, so a static export is a good fit and avoids a web server. The agent is a long-lived
+worker with native modules; Fargate fits better than Lambda.
 
-**Consequences:** `NEXT_PUBLIC_*` values are set in the Vercel build environment. AWS deploy work is
-still Part 2 (Terraform, environments, OIDC, deploy workflow); nothing deploys automatically today.
+**Consequences:** `NEXT_PUBLIC_*` values are set at web build time; `apps/web/out/` is synced to S3
+and CloudFront is invalidated. `next start` is replaced by `serve out` for local preview. AWS deploy
+work is still Part 2 (Terraform, environments, OIDC, deploy workflow); nothing deploys automatically
+today. If "AWS only" is later meant to include the data/voice providers, replacing Supabase and
+LiveKit is a separate major decision.
 
 ---
 

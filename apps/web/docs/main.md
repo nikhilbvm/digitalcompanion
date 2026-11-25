@@ -51,6 +51,13 @@ label.
 - No color-only meaning; labels are text.
 - The footer states 911/988 and the local-POC limitation.
 
+## Hosting
+
+The app is client-only, so `next build` exports static files to `apps/web/out/` (`output: 'export'`,
+`trailingSlash: true`). The AWS target is S3 + CloudFront; CloudFront serves the bucket and TLS.
+`NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` are inlined at build time. `next dev` is for
+local development; `pnpm build && pnpm start` previews the static output.
+
 ## Deliberate limitations
 
 - No login, no multi-family accounts; admin is open locally.
