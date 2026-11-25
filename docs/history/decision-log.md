@@ -4,6 +4,21 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-25 — Hosting split: Vercel web, AWS API/agent
+
+**Decision:** The web app deploys to Vercel by default; the API and voice agent deploy to AWS (ECR +
+ECS Fargate, with Lambda/API Gateway kept open for the API). Supabase, LiveKit Cloud, Anthropic and
+Deepgram remain managed services.
+
+**Context:** Vercel gives preview deployments and zero web infrastructure work, while the agent is a
+long-lived worker with native modules and the API needs a normal container. A single-cloud S3 +
+CloudFront option exists if that becomes a requirement.
+
+**Consequences:** `NEXT_PUBLIC_*` values are set in the Vercel build environment. AWS deploy work is
+still Part 2 (Terraform, environments, OIDC, deploy workflow); nothing deploys automatically today.
+
+---
+
 ## 2026-11-25 — Filter the LLM stream, not only TTS
 
 **Decision:** The voice output filter wraps `llmNode`; `ttsNode` applies the same filter as a second

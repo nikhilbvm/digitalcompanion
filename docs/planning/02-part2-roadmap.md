@@ -64,8 +64,8 @@ the outcome, and stops after opt-out.
    service update; `/health` smoke test; deploy tag `deploy/{env}/{component}/v{version}`.
 6. **Observability** — CloudWatch logs/alarms for 5xx, latency, agent restarts, classifier degradation,
    flag volume; no transcript text.
-7. **Web** — Vercel (or S3 + CloudFront); `NEXT_PUBLIC_API_BASE_URL` points at the API; Capacitor
-   wrapper later using the same client-only UI.
+7. **Web** — **default Vercel** (S3 + CloudFront is the all-AWS alternative); `NEXT_PUBLIC_API_BASE_URL`
+   points at the API; Capacitor wrapper later using the same client-only UI.
 8. **Rollback** — redeploy previous image tag; migrations backward-compatible for one release.
 
 Exit criteria: a one-command deploy to `dev`, a documented rollback, alarms firing to an on-call

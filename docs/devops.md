@@ -10,7 +10,7 @@ versions, no secrets in git, and deployment state recorded in git tags.**
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | PR + push to `main` | pnpm install, lint, typecheck, test, build, container builds, API `/health` smoke |
+| [`ci.yml`](../.github/workflows/ci.yml) | PR + push to `main` | pnpm install, lint, typecheck, test, build, container builds, API `/health` + agent image smoke |
 | [`docker-publish.yml`](../.github/workflows/docker-publish.yml) | manual | build API or agent image, push to GHCR |
 
 CI needs no application secrets. Docker publishing uses `GITHUB_TOKEN` with `packages: write`.
@@ -53,6 +53,22 @@ Same variable contract as [`.env.example`](../.env.example). See
 ---
 
 ## 4. Part 2 target architecture
+
+### Hosting decision (default)
+
+| Component | Target | Why |
+|---|---|---|
+| Web (`apps/web`) | **Vercel** | Preview deploys and zero web infrastructure; Capacitor works with the same client build. S3 + CloudFront is the all-AWS alternative. |
+| API (`apps/api`) | **AWS ECS Fargate** | Normal container, long-lived; `createApp()` also allows Lambda/API Gateway later. |
+| Voice agent (`apps/agent`) | **AWS ECS Fargate** | Long-lived worker with native modules; outbound to LiveKit only, no inbound listener. |
+| Database | **Supabase** | Managed Postgres, backups, RLS. |
+| Media / voice | **LiveKit Cloud** | Managed rooms, agent dispatch, TURN. |
+| LLM / STT / TTS | **Anthropic / Deepgram** | Managed APIs. |
+| Secrets | AWS Secrets Manager + GitHub Environments (Part 2) | No secrets in git. |
+
+If a single-cloud AWS posture is required, replace Vercel with S3 + CloudFront. Set
+`NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` in the web host's **build** environment; they
+are inlined at build time.
 
 ```
 GitHub Actions (OIDC → AWS role, no static keys)
@@ -158,7 +174,8 @@ Part 1 logs structured JSON to stdout (`chat_turn`, `voice_turn`) without messag
 ## 8. Open decisions
 
 1. API runtime: ECS Fargate vs Lambda/API Gateway. Default: Fargate for parity with the agent.
-2. Web hosting: Vercel vs S3+CloudFront. Default: Vercel until Capacitor.
+2. Web hosting: **decided default = Vercel** until Capacitor. Revisit S3 + CloudFront if a
+   single-cloud AWS posture is required. API/agent stay on AWS ECS Fargate.
 3. Terraform state backend: S3+DynamoDB, one state per env.
 4. Image registry: GHCR for Part 1, ECR for Part 2.
 5. Release automation: semantic-release vs manual tags. Default: manual tag for the POC, revisit when
