@@ -25,7 +25,15 @@ if [ ! -f .env ]; then
   echo "Created .env from .env.example — fill in the API keys before running."
 fi
 
-if docker info >/dev/null 2>&1; then
+set -a
+# shellcheck disable=SC1091
+. ./.env
+set +a
+
+if [ -n "${DATABASE_URL:-}" ] && ! printf '%s' "$DATABASE_URL" | grep -q '@localhost:'; then
+  echo "DATABASE_URL points at a remote database; skipped the local Docker Postgres."
+  echo "Apply the schema with: pnpm db:migrate"
+elif docker info >/dev/null 2>&1; then
   echo "Starting local Postgres and applying the schema..."
   bash scripts/db-up.sh
   bash scripts/db-migrate.sh
