@@ -33,6 +33,7 @@ links back to the root [README](../README.md).
 - [00-master-plan.md](planning/00-master-plan.md) — product, repo layout, contracts, phases, acceptance
 - [01-part1-checklist.md](planning/01-part1-checklist.md) — executable Part 1 checklist and status
 - [02-part2-roadmap.md](planning/02-part2-roadmap.md) — memory, scheduled ring, AWS/Terraform
+- [03-aws-tenancy.md](planning/03-aws-tenancy.md) — chosen account-vending platform, SSO bootstrap and tenant lifecycle
 
 ## Development
 
