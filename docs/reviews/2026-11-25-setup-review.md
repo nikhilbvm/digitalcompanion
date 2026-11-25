@@ -24,6 +24,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
 | Public production readiness | **Not ready** — no auth, rate limits, retention, audit, escalation |
+| User acceptance | **Basic POC confirmed** — text + voice with audible replies verified locally on 2026-11-25 |
 
 ## What was checked
 

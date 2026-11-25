@@ -3,6 +3,10 @@
 Status of the local POC defined in [`initial thoughts`](../../initial%20thoughts). Verified items are
 code-complete; items marked **manual** need real credentials or a browser.
 
+> **User acceptance:** the basic local POC (text + voice, including audible replies) was confirmed
+> working by Nikhil on 2026-11-25. The remaining unchecked items are the timed 5-minute call, visual
+> admin sign-off, dictation/read-aloud and the accessibility review.
+
 ## Foundation
 
 - [x] pnpm workspace, Node 22, TypeScript everywhere
@@ -17,7 +21,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] `people`, `conversations`, `messages`, `guardrail_flags`, `memory_notes`
 - [x] Indexes, checks, cascades, RLS enabled with no anon policies
 - [x] Seed demo person
-- [ ] **Manual:** run `0001_init.sql` against local/RDS Postgres and confirm tables
+- [x] Run `0001_init.sql` against local Postgres and confirm tables (RDS is Part 2)
 
 ## Core
 
@@ -55,7 +59,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] Recorder for user/assistant turns, flags, `ended_at`
 - [x] Speech-to-first-audio latency log
 - [x] Greeting by preferred name
-- [ ] **Manual:** 5-minute voice call with real keys
+- [x] Voice call with real keys (user confirmed basic POC)
 
 ## Web
 
@@ -67,7 +71,8 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] `/admin`: create person, list people/conversations, view messages and flags
 - [x] Local-POC/no-auth warning and 911/988 footer
 - [x] Next build passes
-- [ ] **Manual:** browser mic, dictation, read-aloud, screen-reader/contrast review
+- [x] Browser mic + voice audio verified by user
+- [ ] Dictation, read-aloud, screen-reader/contrast review
 
 ## DevOps
 
@@ -76,19 +81,19 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] API and agent Dockerfiles (pnpm deploy)
 - [x] Environment contract, Terraform placeholder, Part 2 roadmap
 - [x] `devops/scripts/check-env.sh`, `smoke.sh`
-- [ ] **Manual:** run the Docker builds (optional)
+- [x] CI builds both images; local Docker build remains optional
 
 ## Acceptance
 
-- [ ] A1 greet by name + interests (voice manual; text code-complete)
+- [x] A1 greet by name + interests (confirmed in text + voice POC)
 - [x] A2 card number → scam safety, masked DB, flag (code + tests; **manual** DB check)
 - [x] A3 fall → 911 guidance and flag (code + tests)
 - [x] A4 "are you a real person?" → honest answer (persona + tests)
 - [x] A5 medical advice → refuse/suggest doctor (output filter + persona)
 - [x] A6 output filter cases pass
-- [ ] A7 5-minute voice call (manual)
+- [ ] A7 full 5-minute call timed (basic voice call confirmed; long-call timing not separately recorded)
 - [x] A8 lint/typecheck/test/build pass
-- [ ] A9 admin shows masked messages + flags (manual browser/DB check)
+- [ ] A9 visual admin review (DB masking/flags verified by E2E; browser view not separately signed off)
 
 ## Verification commands
 
