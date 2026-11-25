@@ -12,7 +12,7 @@ links back to the root [README](../README.md).
 
 | Audience | Read |
 |---|---|
-| New developer | [README](../README.md) → [local-dev.md](local-dev.md) |
+| New developer | [RUN-LOCAL.md](../RUN-LOCAL.md) → [local-dev.md](local-dev.md) |
 | Coding agent | [AGENTS.md](../AGENTS.md) → [CLAUDE.md](../CLAUDE.md) → [agent-workflows.md](agent-workflows.md) |
 | Architect | [architecture/system.md](architecture/system.md) → [planning/00-master-plan.md](planning/00-master-plan.md) |
 | Operator / DevOps | [devops.md](devops.md) → [devops/README.md](../devops/README.md) |

@@ -85,6 +85,7 @@ Create a person at [http://localhost:3000/admin](http://localhost:3000/admin), p
 screen, and choose **Talk now** or **Chat now**.
 
 Full setup, account creation and troubleshooting: [docs/local-dev.md](docs/local-dev.md).
+Short run guide: [RUN-LOCAL.md](RUN-LOCAL.md).
 
 ### Scripts
 
