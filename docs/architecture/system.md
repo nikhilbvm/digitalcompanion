@@ -61,7 +61,7 @@ subpaths (`@companion/core/types`) so server code never enters the browser bundl
    fallback.
 8. Safe assistant text and output flags are persisted; `done` closes the stream; latency is logged.
 
-Contract detail: [apps/api/docs/chat-stream.md](../apps/api/docs/chat-stream.md).
+Contract detail: [apps/api/docs/chat-stream.md](../../apps/api/docs/chat-stream.md).
 
 ## Voice flow
 
@@ -76,7 +76,7 @@ Contract detail: [apps/api/docs/chat-stream.md](../apps/api/docs/chat-stream.md)
 6. On close, `ended_at` is set.
 
 Detail: [voice-pipeline.md](voice-pipeline.md) and
-[apps/agent/docs/voice-pipeline.md](../apps/agent/docs/voice-pipeline.md).
+[apps/agent/docs/voice-pipeline.md](../../apps/agent/docs/voice-pipeline.md).
 
 ## Failure modes and behavior
 

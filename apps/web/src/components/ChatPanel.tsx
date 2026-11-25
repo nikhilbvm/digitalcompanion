@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BigButton } from './BigButton';
 
 export interface ChatMessageView {
@@ -53,8 +53,13 @@ interface ChatPanelProps {
 export function ChatPanel({ messages, sending, disabled, onSend, onEnd }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [listening, setListening] = useState(false);
+  // Computed after mount to keep server and client markup identical.
+  const [speechAvailable, setSpeechAvailable] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const speechAvailable = getSpeechRecognition() !== null;
+
+  useEffect(() => {
+    setSpeechAvailable(getSpeechRecognition() !== null);
+  }, []);
 
   const send = async (): Promise<void> => {
     const text = input.trim();

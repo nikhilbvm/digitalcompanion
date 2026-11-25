@@ -129,7 +129,12 @@ export default defineAgent({
   },
 });
 
-assertAgentConfig();
+try {
+  assertAgentConfig();
+} catch (error) {
+  console.error(`[agent] ${error instanceof Error ? error.message : error}`);
+  process.exit(1);
+}
 
 cli.runApp(
   new ServerOptions({

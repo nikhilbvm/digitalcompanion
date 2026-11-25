@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-dotenv.config({ path: path.resolve(here, '../../../.env') });
-dotenv.config({ path: path.resolve(here, '../.env'), override: true });
+dotenv.config({ path: path.resolve(here, '../../../.env'), quiet: true });
+dotenv.config({ path: path.resolve(here, '../.env'), override: true, quiet: true });
 
 const effort = (process.env.ANTHROPIC_EFFORT ?? 'low') as
   | 'low'
