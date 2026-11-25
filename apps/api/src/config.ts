@@ -42,7 +42,7 @@ export const config = {
     process.env.OPENROUTER_DATA_COLLECTION === 'allow' ? ('allow' as const) : ('deny' as const),
   chatHistoryLimit: Number(process.env.CHAT_HISTORY_LIMIT ?? 20),
   maxReplyTokens: Number(process.env.MAX_REPLY_TOKENS ?? 500),
-  agentName: process.env.AGENT_NAME ?? 'companion',
+  agentName: process.env.AGENT_NAME ?? 'dc',
   livekitUrl: process.env.LIVEKIT_URL ?? '',
   livekitApiKey: process.env.LIVEKIT_API_KEY ?? '',
   livekitApiSecret: process.env.LIVEKIT_API_SECRET ?? '',

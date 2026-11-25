@@ -327,7 +327,7 @@ block, provider pinned to Anthropic, check refusal/finish reasons.
 
 ### `apps/agent`
 
-LiveKit worker with `agentName: "companion"` (explicit dispatch). On job start:
+LiveKit worker with `agentName: "dc"` (explicit dispatch). On job start:
 
 1. Parse `ctx.job.metadata` → `{ personId, conversationId }`; load person + profile.
 2. Build `voice.Agent` instructions from `buildSystemPrompt(person)`.
@@ -504,7 +504,7 @@ DATABASE_SSL=false
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 NEXT_PUBLIC_LIVEKIT_URL=
 API_PORT=4000
-AGENT_NAME=companion
+AGENT_NAME=dc
 ```
 
 Never commit `.env`, `.env.local`, `.secrets*`. CI uses repository secrets (none needed for

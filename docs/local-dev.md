@@ -43,7 +43,7 @@ bypass OpenRouter. Do not add both keys to the browser or any `NEXT_PUBLIC_*` va
 1. Create a project at [cloud.livekit.io](https://cloud.livekit.io) (the free Build plan is enough).
 2. Copy the project **WebSocket URL** (`wss://…`), **API key** and **API secret**.
 3. Put them in `.env` as `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
-4. `AGENT_NAME` defaults to `companion`. Keep it identical in the token endpoint and the worker
+4. `AGENT_NAME` defaults to `dc`. Keep it identical in the token endpoint and the worker
    (both read the same `.env` in this monorepo).
 
 ### Postgres
@@ -92,7 +92,7 @@ Fill `.env`:
 | `DATABASE_SSL_CA` | no | optional RDS CA bundle path |
 | `NEXT_PUBLIC_API_BASE_URL` | yes | default `http://localhost:4000` |
 | `NEXT_PUBLIC_LIVEKIT_URL` | voice | same as `LIVEKIT_URL` |
-| `AGENT_NAME` | no | default `companion` |
+| `AGENT_NAME` | no | default `dc` |
 | `API_PORT` | no | default `4000`; cloud runtimes may inject `PORT` instead |
 | `CORS_ORIGIN` | no | default `http://localhost:3000` |
 

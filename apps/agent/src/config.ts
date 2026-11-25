@@ -23,7 +23,7 @@ const llmProvider =
       : 'anthropic';
 
 export const config = {
-  agentName: process.env.AGENT_NAME ?? 'companion',
+  agentName: process.env.AGENT_NAME ?? 'dc',
   llmProvider,
   llmEffort: ['low', 'medium', 'high', 'xhigh', 'max'].includes(effort) ? effort : 'low',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',

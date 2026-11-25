@@ -21,7 +21,7 @@ Required: `DEEPGRAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SEC
 `DATABASE_URL`, and either `OPENROUTER_API_KEY` (default) or `ANTHROPIC_API_KEY` when
 `LLM_PROVIDER=anthropic`.
 
-Optional: `AGENT_NAME` (default `companion`), `OPENROUTER_MODEL`, `OPENROUTER_PROVIDER`, `LLM_EFFORT`,
+Optional: `AGENT_NAME` (default `dc`), `OPENROUTER_MODEL`, `OPENROUTER_PROVIDER`, `LLM_EFFORT`,
 `VOICE_MAX_TOKENS`, `VOICE_STT_MODEL` (default `nova-3`), `VOICE_TTS_MODEL` (default
 `aura-2-andromeda-en`).
 

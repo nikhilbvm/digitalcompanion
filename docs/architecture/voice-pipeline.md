@@ -12,7 +12,7 @@ web: Talk now
   → getUserMedia (permission)
   → POST /livekit/token {personId, conversationId?}
       api creates/uses voice conversation, mints AccessToken
-      token.roomConfig.agents = [RoomAgentDispatch{ agentName: 'companion',
+      token.roomConfig.agents = [RoomAgentDispatch{ agentName: 'dc',
                                                      metadata: {personId, conversationId} }]
   → room.connect(LIVEKIT_URL, token)
   → room.localParticipant.setMicrophoneEnabled(true)
@@ -54,7 +54,7 @@ web: Talk now
 
 ## Why explicit dispatch
 
-`ServerOptions.agentName = AGENT_NAME` (default `companion`) enables explicit dispatch: the worker
+`ServerOptions.agentName = AGENT_NAME` (default `dc`) enables explicit dispatch: the worker
 does **not** join every room. The token endpoint attaches the dispatch request to the joining
 participant's room configuration, so the agent joins exactly the intended room and receives the
 person/conversation metadata in the job.

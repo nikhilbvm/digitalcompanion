@@ -18,6 +18,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Build all apps in CI | **Good** — lint, typecheck, 66 tests, Next/tsup builds |
 | Database (AWS-only) | **Good** — Postgres via `pg` for local Docker/RDS; migration and Store SQL exercised in CI |
 | LLM provider | **Good** — OpenRouter default (`anthropic/claude-haiku-5.5`) with direct Anthropic fallback; live text, classifier, guardrail and voice-adapter calls verified |
+| Voice service path | **Good** — worker registered as `dc`, a live dispatch ran, and the greeting was generated through OpenRouter/Deepgram and persisted; browser/mic conversation still manual |
 | Build API/agent containers | **Good** — CI builds both, smoke-tests API `/health`, and confirms the agent image boots to its config check |
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
@@ -35,6 +36,9 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 - Live OpenRouter text chat: benign reply, scam turn (`category: scam`, classifier 0.90, masked card,
   flags), emergency turn (911 guidance), ~0.6–0.8s TTFT.
 - Voice LLM adapter in isolation: OpenRouter streaming returned `VOICE OK` with usage.
+- LiveKit: token dispatch carries `agentName: dc`; worker registered with LiveKit Cloud; a dispatched
+  test job loaded Mary, generated the greeting through OpenRouter, synthesized it through Deepgram and
+  persisted it. Deepgram TTS key check returned HTTP 200.
 - Markdown link integrity across all docs.
 - Docker install/build/deploy sequence simulated outside Docker; both Dockerfiles built by CI.
 - GitHub Actions runs on every push, including the new container-build job.
@@ -51,6 +55,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Supabase was the database | Not AWS-only | Replaced with a server-side `pg` pool, `db/` migrations, Docker Postgres locally and an RDS target; CI applies the schema and runs a Store smoke test |
 | SSE route aborted immediately after the request body | Live text chat returned only `meta` | Client-disconnect detection moved from `req` to `res` close; live streaming then worked |
 | LLM was direct-Anthropic only | Existing OpenRouter key could not be used | Added OpenRouter as the default provider for text, classifier and voice, with direct Anthropic as `LLM_PROVIDER=anthropic` fallback; live tests passed |
+| Deepgram key was pasted into `.env.example` | A live key was pushed to the public repo | Removed from the working tree, added `pnpm check:secrets`/CI scan, and the key was rotated in Deepgram. The old value remains in git history but is revoked. |
 | Cloud runtime assumptions were under-documented | Hosting mistakes likely | Added cloud runtime notes to [docs/devops.md](../devops.md) and the env contract |
 
 ## Remaining gaps before a cloud deployment
