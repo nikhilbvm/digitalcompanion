@@ -8,9 +8,9 @@ with the exact files and hooks in this app.
 | File | Responsibility |
 |---|---|
 | `src/main.ts` | `defineAgent`, metadata, person load, `AgentSession`, greeting, close |
-| `src/companion-agent.ts` | `onUserTurnCompleted` (input guardrail), `ttsNode` (output filter, persistence, latency) |
+| `src/companion-agent.ts` | `onUserTurnCompleted` (input guardrail), `llmNode` (output filter + persistence), `ttsNode` (second filter layer + latency) |
 | `src/llm/anthropic.ts` | `CompanionAnthropicLLM` + stream, request policy |
-| `src/guardrail-nodes.ts` | `filterTextForTts`, `tapFirstAudio` |
+| `src/guardrail-nodes.ts` | `filterLlmStream`, `filterTextForTts`, `tapFirstAudio` |
 | `src/recorder.ts` | user/assistant messages, flags, `ended_at` |
 | `src/config.ts` | env, `assertAgentConfig` |
 
@@ -22,8 +22,8 @@ t1  final transcript (Deepgram)
 t2  onUserTurnCompleted starts
 t3  guardrail done (patterns sync + classifier await)
 t4  Claude first token
-t5  first complete sentence filtered → TTS starts
-t6  first audio frame (logged)
+t5  llmNode filters the first complete sentence → context/transcript/TTS
+t6  TTS second-layer filter, first audio frame (logged)
 ```
 
 `speechToFirstAudioMs = t6 - finalTranscript.createdAt`; `guardrailMs = t3 - t2`. If t3 is much larger
@@ -43,10 +43,14 @@ before the LLM call; the recorder stores masked text too.
 
 ## Output filtering and persistence ordering
 
-The TTS text stream is filtered before `Agent.default.ttsNode`. The generator accumulates safe text
-and persists it when the stream completes (or in `finally` on barge-in). The raw assistant ChatMessage
-remains in the LLM context; the user never hears it, and the DB does not receive it. Part 2 may add a
-context scrub if this causes follow-up issues.
+The **LLM stream** is filtered in `llmNode` before LiveKit builds the assistant message. That is the
+primary layer: the chat context, the live transcription, TTS and the recorder all receive safe text.
+The filter accumulates the safe reply and persists it when the stream completes. `ttsNode` applies the
+same filter again as a second layer for any non-LLM `say` text; it only writes a message if that layer
+actually catches something, so normal replies are not duplicated.
+
+This ordering matters: filtering only at TTS would leave raw unsafe text in the chat context and the
+live transcript even though the audio was safe.
 
 ## Adding tools
 

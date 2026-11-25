@@ -1,12 +1,15 @@
 import {
   Agent,
+  type ChatChunk,
   type ChatContext,
   type ChatMessage,
+  type FlushSentinel,
   type ModelSettings,
+  type ToolContext,
 } from '@livekit/agents';
 import type { AudioFrame } from '@livekit/rtc-node';
 import { buildSystemText, runInputGuardrail, type Person } from '@companion/core';
-import { filterTextForTts, tapFirstAudio } from './guardrail-nodes.js';
+import { filterLlmStream, filterTextForTts, tapFirstAudio } from './guardrail-nodes.js';
 import type { CompanionAnthropicLLM } from './llm/anthropic.js';
 import type { Recorder } from './recorder.js';
 
@@ -61,7 +64,26 @@ export class CompanionAgent extends Agent {
   }
 
   /**
-   * Filter every sentence before TTS and persist the spoken (safe) version.
+   * Filter the LLM stream before LiveKit builds the assistant message, so the
+   * chat context, live transcript and TTS all receive safe text. Persistence
+   * happens here, once per reply.
+   */
+  override async llmNode(
+    chatCtx: ChatContext,
+    toolCtx: ToolContext,
+    modelSettings: ModelSettings,
+  ): Promise<ReadableStream<ChatChunk | string | FlushSentinel> | null> {
+    const source = await Agent.default.llmNode(this, chatCtx, toolCtx, modelSettings);
+    if (!source) return null;
+
+    return filterLlmStream(source, async (safeText, flags) => {
+      await this.recorder.recordAssistant(safeText, flags);
+    }) as ReadableStream<ChatChunk | string | FlushSentinel>;
+  }
+
+  /**
+   * Second safety layer around TTS (covers any text that did not come through
+   * llmNode, e.g. a future `session.say`). The LLM path is already filtered.
    */
   override async ttsNode(
     text: ReadableStream<string> | AsyncIterable<string>,
@@ -73,7 +95,11 @@ export class CompanionAgent extends Agent {
     this.lastGuardrailMs = 0;
 
     const filtered = filterTextForTts(text, async (safeText, flags) => {
-      await this.recorder.recordAssistant(safeText, flags);
+      // Normal replies are already safe and persisted by llmNode. Only persist
+      // here if this second layer actually caught something.
+      if (flags.length > 0) {
+        await this.recorder.recordAssistant(safeText, flags);
+      }
     });
 
     const audio = await Agent.default.ttsNode(this, filtered, modelSettings);

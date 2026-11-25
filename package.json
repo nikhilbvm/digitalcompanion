@@ -14,7 +14,7 @@
     "start": "bash scripts/start.sh",
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm --filter @companion/core test",
+    "test": "pnpm -r --if-present test",
     "verify": "bash scripts/verify.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml,css}\" --ignore-path .gitignore"
   },

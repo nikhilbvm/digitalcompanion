@@ -34,10 +34,13 @@ web: Talk now
       persona/profile system blocks (persona cached)
       output_config.effort = low
       stop_reason checked; refusal → gentle fallback
-  → ttsNode:
-      sentence filter replaces unsafe sentences
-      default TTS node (Deepgram Aura-2)
+  → llmNode:
+      sentence filter replaces unsafe sentences before LiveKit builds the
+      assistant message (so chat context + live transcript are safe too)
       safe text + output flags persisted
+  → ttsNode:
+      second safety layer (covers any non-LLM `say` text)
+      default TTS node (Deepgram Aura-2)
       first audio frame timestamped for latency
   → LiveKit Cloud → browser
       lk.transcription text streams update the large-type transcript
@@ -103,7 +106,8 @@ cache breakpoint placement intact.
 | Hook | Runs | Effect |
 |---|---|---|
 | `onUserTurnCompleted` | after final transcript, before LLM | awaited input guardrail, mask, persist user turn + flags, set turn instruction |
-| `ttsNode` | before synthesis | sentence-level output filter, persist safe assistant text + flags, timestamp first audio |
+| `llmNode` | around the LLM stream | sentence-level output filter before LiveKit builds the assistant message; persist safe assistant text + flags |
+| `ttsNode` | before synthesis | second output-filter layer for non-LLM text; timestamp first audio |
 | AgentSession `Error` | any session error | log to console (no message text) |
 | AgentSession `Close` | end of call | `ended_at` |
 

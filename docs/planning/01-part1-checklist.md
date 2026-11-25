@@ -28,7 +28,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] Haiku classifier with structured output and graceful degradation
 - [x] Severity merge and per-turn safety instructions
 - [x] Sentence-level output filter with safe replacement
-- [x] 63 tests covering patterns, masking, output filter, sentence accumulation
+- [x] 66 tests covering patterns, masking, output filter, sentence accumulation and the agent stream filter
 - [x] Supabase client factory and memory helpers
 
 ## API
@@ -51,7 +51,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] Deepgram Nova-3 STT, Aura-2 TTS, Silero VAD, turn detector
 - [x] Custom Anthropic adapter: effort low, cached persona, refusal fallback
 - [x] `onUserTurnCompleted` input guardrail and masking
-- [x] `ttsNode` sentence filter and safe-text persistence
+- [x] `llmNode` sentence filter + safe-text persistence; `ttsNode` second layer
 - [x] Recorder for user/assistant turns, flags, `ended_at`
 - [x] Speech-to-first-audio latency log
 - [x] Greeting by preferred name

@@ -42,8 +42,13 @@ onUserTurnCompleted(chatCtx, newMessage):
   recorder.recordUser(text, result.hits)
   llm.setTurnInstruction(result.safetyInstruction)
 
+llmNode(chatCtx, toolCtx, settings):
+  source = Agent.default.llmNode(...)
+  filtered = filterLlmStream(source, recordAssistant)   ← safe context/transcript/TTS
+  return filtered
+
 ttsNode(text, settings):
-  filtered = filterTextForTts(text, recordAssistant)
+  filtered = filterTextForTts(text, recordOnlyIfFlags)  ← second layer
   audio = Agent.default.ttsNode(this, filtered, settings)
   return tapFirstAudio(audio, log latency)
 ```

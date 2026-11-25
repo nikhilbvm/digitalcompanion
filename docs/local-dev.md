@@ -148,7 +148,7 @@ enjoy hearing your stories."
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm test        # 63+ guardrail/text tests
+pnpm test        # 66 guardrail/text/stream tests
 pnpm build
 pnpm verify      # all of the above
 ```

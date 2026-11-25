@@ -184,7 +184,7 @@ digitalcompanion/
 │       │   ├── main.ts            # defineAgent + ServerOptions + cli.runApp
 │       │   ├── companion-agent.ts # voice.Agent subclass + hooks
 │       │   ├── llm/anthropic.ts   # custom llm.LLM/LLMStream adapter (Haiku 5.5)
-│       │   ├── guardrail-nodes.ts # input hook + ttsNode sentence filter
+│       │   ├── guardrail-nodes.ts # LLM-stream + TTS sentence filters
 │       │   ├── recorder.ts        # turn persistence + latency logging
 │       │   └── config.ts
 │       ├── package.json
@@ -333,8 +333,9 @@ LiveKit worker with `agentName: "companion"` (explicit dispatch). On job start:
 5. Hooks:
    - `onUserTurnCompleted` → input guardrail (await classifier), set per-turn safety instruction,
      persist masked user message + flags.
-   - `ttsNode` → sentence-level output filter before `Agent.default.ttsNode`, record flags and safe
-     text.
+   - `llmNode` → sentence-level output filter before LiveKit builds the assistant message; record
+     flags and safe text (so context, transcript and TTS are safe). `ttsNode` repeats the filter as a
+     second layer for non-LLM text.
    - `conversation_item_added` → track assistant item IDs for persistence.
    - `close` → persist pending turns, set `ended_at`.
 6. Log speech-end → first-audio-out latency per turn.

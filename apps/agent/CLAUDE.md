@@ -16,7 +16,9 @@ LiveKit voice worker for Digital Companion.
 - Job metadata (`ctx.job.metadata`) is the only trusted source of `personId`/`conversationId`.
 - `onUserTurnCompleted` awaits the input guardrail, masks identifiers in the ChatMessage, persists the
   masked user turn, and sets the per-turn safety instruction.
-- `ttsNode` filters every sentence and persists the **spoken safe text**, not the raw LLM output.
+- `llmNode` filters every sentence and persists the **safe filtered text**, not the raw LLM output, so
+  the chat context and live transcript are safe as well as the audio. `ttsNode` is a second layer for
+  non-LLM text.
 - `CompanionAnthropicLLM` is the only place for Anthropic request policy: effort low, cached persona,
   no sampling params, refusal fallback.
 - Recorder failures must never cut the audio pipeline; log and continue.

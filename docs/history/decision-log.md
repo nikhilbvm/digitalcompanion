@@ -4,6 +4,21 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-25 — Filter the LLM stream, not only TTS
+
+**Decision:** The voice output filter wraps `llmNode`; `ttsNode` applies the same filter as a second
+layer.
+
+**Context:** LiveKit builds the assistant ChatMessage, the live transcription and TTS from the LLM
+stream. Filtering only in `ttsNode` made the audio safe but left the raw unsafe sentence in the chat
+context and the transcript the person can read.
+
+**Consequences:** The safe text is what the context, transcript, TTS and recorder all see. Persistence
+happens once in `llmNode`; `ttsNode` only records if its second layer catches something (e.g. a
+future `session.say`). This is the safety invariant to preserve when adding tools or handoffs.
+
+---
+
 ## 2026-11-25 — Custom Anthropic adapter for the voice agent
 
 **Decision:** Implement `CompanionAnthropicLLM` in `apps/agent/src/llm/anthropic.ts` instead of using

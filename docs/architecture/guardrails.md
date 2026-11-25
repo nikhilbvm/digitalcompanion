@@ -70,7 +70,9 @@ Pattern cases (card, fall) are synchronous, so the demo-critical scenarios never
 
 ## Output filter (every reply sentence)
 
-Runs per sentence in both modes. A sentence is replaced wholesale with
+Runs per sentence in both modes. In voice it wraps the **LLM stream** (`llmNode`) so the chat
+context and live transcription are safe too; `ttsNode` applies the same filter as a second layer for
+any text that did not come through the LLM. A sentence is replaced wholesale with
 `"Let's talk about something else."` if it:
 
 - asks for money/cash/card number/bank/routing/SSN/password/one-time/verification/Medicare,
@@ -80,8 +82,9 @@ Runs per sentence in both modes. A sentence is replaced wholesale with
 - claims to be human or a relative/nurse/doctor/banker,
 - contains a sensitive identifier (even if accidental).
 
-Each replacement records an `output` flag. Voice persists the **safe spoken text**, not the raw LLM
-output. In text chat, only filtered text is sent to the browser and persisted.
+Each replacement records an `output` flag. Voice persists the **safe filtered text**, not the raw LLM
+output, and the assistant message in the chat context is the safe version. In text chat, only
+filtered text is sent to the browser and persisted.
 
 The output filter is intentionally conservative; a false positive produces a harmless redirect. It is
 not a content moderator for general conversation.

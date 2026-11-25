@@ -36,9 +36,9 @@ Optional: `AGENT_NAME` (default `companion`), `ANTHROPIC_MODEL`, `ANTHROPIC_EFFO
 
 ```
 src/main.ts              defineAgent + ServerOptions + cli.runApp
-src/companion-agent.ts   Agent subclass: onUserTurnCompleted, ttsNode
+src/companion-agent.ts   Agent subclass: onUserTurnCompleted, llmNode, ttsNode
 src/llm/anthropic.ts     custom llm.LLM/LLMStream (effort, cache, refusal)
-src/guardrail-nodes.ts   sentence filtering + first-audio tap
+src/guardrail-nodes.ts   LLM stream + TTS sentence filtering, first-audio tap
 src/recorder.ts          masked turn/flag persistence, ended_at
 src/config.ts            env loading + required-variable check
 ```
