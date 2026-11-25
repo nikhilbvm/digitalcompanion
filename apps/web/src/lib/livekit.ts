@@ -119,7 +119,8 @@ export class VoiceSession {
           ? `I could not start the voice call: ${error.message}`
           : 'I could not start the voice call.',
       );
-      await this.cleanup();
+      // Also closes the conversation row created by the token request.
+      await this.end();
     }
   }
 

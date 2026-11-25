@@ -18,8 +18,6 @@ const STATUS_TEXT: Record<VoiceStatus, string> = {
 };
 
 export function VoicePanel({ status, transcript, onEnd }: VoicePanelProps) {
-  const live = status === 'listening' || status === 'speaking' || status === 'connecting';
-
   return (
     <section className="flex w-full flex-col gap-5">
       <div
@@ -56,7 +54,7 @@ export function VoicePanel({ status, transcript, onEnd }: VoicePanelProps) {
       </div>
 
       <div>
-        <BigButton variant="end" onClick={() => void onEnd()} disabled={!live}>
+        <BigButton variant="end" onClick={() => void onEnd()}>
           End
         </BigButton>
       </div>

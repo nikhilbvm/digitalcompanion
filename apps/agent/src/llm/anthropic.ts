@@ -173,7 +173,6 @@ class CompanionAnthropicLLMStream extends llm.LLMStream {
   #outputTokens = 0;
   #cacheCreationTokens = 0;
   #cacheReadTokens = 0;
-  #emittedText = false;
 
   constructor(
     llmInstance: CompanionAnthropicLLM,
@@ -194,7 +193,6 @@ class CompanionAnthropicLLMStream extends llm.LLMStream {
     this.#outputTokens = 0;
     this.#cacheCreationTokens = 0;
     this.#cacheReadTokens = 0;
-    this.#emittedText = false;
 
     try {
       const stream = await this.#client.messages.create(this.#requestParams, {
@@ -221,13 +219,14 @@ class CompanionAnthropicLLMStream extends llm.LLMStream {
               id: this.#requestId,
               delta: { role: 'assistant', content: text },
             });
-            this.#emittedText = true;
             retryable = false;
           }
         }
       }
 
-      if (stopReason === 'refusal' && !this.#emittedText) {
+      if (stopReason === 'refusal') {
+        // A refusal can arrive after a partial reply; append the safe fallback
+        // either way so the turn always ends with a gentle line.
         this.queue.put({
           id: this.#requestId,
           delta: { role: 'assistant', content: REFUSAL_FALLBACK },
