@@ -4,6 +4,26 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-25 — OpenRouter as the default LLM gateway
+
+**Decision:** Use OpenRouter (`anthropic/claude-haiku-5.5`) for text chat, the safety classifier and
+the voice agent. Direct Anthropic remains available with `LLM_PROVIDER=anthropic`. Requests pin the
+`anthropic` provider, disable fallbacks, set `data_collection: deny`, use `reasoning.effort: low`,
+attach `cache_control` to the system prefix, and map refusal finish reasons to the gentle fallback.
+
+**Context:** Nikhil already has an OpenRouter key from the gcsealpha2 project and wants one gateway
+that can access many models. OpenRouter now supports the features this app needs for Claude:
+structured outputs, reasoning effort, Anthropic prompt caching, provider pinning and
+`native_finish_reason`/refusal metadata.
+
+**Consequences:** There is an extra routing hop (latency/cost) and OpenRouter sees prompts that include
+care notes; the provider is pinned and data collection denied for this app. The key is local only and
+never committed; a separate OpenRouter key is still preferable for spend isolation. The direct
+Anthropic adapter is retained as a fallback. Switching to a non-Anthropic model requires changing
+`OPENROUTER_PROVIDER`/data policy and re-checking guardrail behavior.
+
+---
+
 ## 2026-11-25 — AWS-only database: RDS PostgreSQL
 
 **Decision:** Replace Supabase with Amazon RDS for PostgreSQL (Aurora Serverless v2 is the scale-up
@@ -26,8 +46,8 @@ old "service-role-only Supabase" decision below is historical.
 **Decision:** Host all app compute on AWS. The web app builds to a static Next export and deploys to
 S3 + CloudFront; the API and voice agent deploy to ECR + ECS Fargate (Lambda/API Gateway remains an
 option for the API). AWS Amplify Hosting is a fallback if managed preview builds are wanted.
-Amazon RDS for PostgreSQL is the database. LiveKit Cloud, Anthropic and Deepgram remain managed
-external services.
+Amazon RDS for PostgreSQL is the database. OpenRouter/Anthropic, LiveKit Cloud and Deepgram remain
+managed external services.
 
 **Context:** Nikhil chose AWS-only hosting to keep infrastructure and billing in one cloud. The web
 UI is client-only, so a static export is a good fit and avoids a web server. The agent is a long-lived
@@ -56,7 +76,7 @@ future `session.say`). This is the safety invariant to preserve when adding tool
 
 ---
 
-## 2026-11-25 — Custom Anthropic adapter for the voice agent
+## 2026-11-25 — Custom Anthropic adapter for the voice agent (now the fallback)
 
 **Decision:** Implement `CompanionAnthropicLLM` in `apps/agent/src/llm/anthropic.ts` instead of using
 `@livekit/agents-plugin-anthropic` directly.

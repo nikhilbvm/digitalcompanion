@@ -11,8 +11,8 @@ Digital Companion is a voice + text AI companion for older adults: `apps/web` (N
 - Never weaken persona rules, input guardrails, output filtering or masking to make a scenario pass.
 - Mask card/SSN/OTP/Medicare numbers before persistence or classifier calls; never echo them.
 - `DATABASE_URL` and its credentials are server-only; never use them in the web app or `NEXT_PUBLIC_*`.
-- Claude requests: `claude-haiku-5-5`, no `temperature`/`top_p`/`top_k`, no prefill, effort low,
-  cached persona, check `stop_reason` including `refusal`.
+- LLM requests: OpenRouter `anthropic/claude-haiku-5.5` by default, or direct `claude-haiku-5-5` with
+  `LLM_PROVIDER=anthropic`; no sampling params, no prefill, effort low, cached prefix, check refusals.
 - The web UI stays client-only (Capacitor-ready).
 
 ## Commands

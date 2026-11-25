@@ -30,7 +30,7 @@ web: Talk now
         mask identifiers in the ChatMessage
         persist masked user message + input flags
         llm.setTurnInstruction(per-turn safety line)
-  → CompanionAnthropicLLM streams text
+  → CompanionOpenRouterLLM (or CompanionAnthropicLLM) streams text
       persona/profile system blocks (persona cached)
       output_config.effort = low
       stop_reason checked; refusal → gentle fallback
@@ -73,7 +73,7 @@ browser-provided IDs beyond that token minted by the API.
 | VAD | Silero (`@livekit/agents-plugin-silero`) | Loaded per job; small and local |
 | Turn detection | `inference.TurnDetector()` | Recommended default; needs LiveKit Cloud |
 | Interruption | adaptive, false-interruption resume | `session.interrupt()` on End/cleanup |
-| LLM | `claude-haiku-5-5`, effort low, max 300 tokens | Custom adapter, no sampling params |
+| LLM | OpenRouter `anthropic/claude-haiku-5.5` (default) or direct `claude-haiku-5-5`, effort low, max 300 | Custom adapters, no sampling params |
 
 Fallback: if the turn detector is unavailable on the LiveKit plan, set
 `turnHandling.turnDetection = 'stt'` in `apps/agent/src/main.ts`. Deepgram endpointing is 25 ms by
@@ -81,23 +81,27 @@ default.
 
 ---
 
-## Custom LLM adapter
+## Custom LLM adapters
 
-The stock `@livekit/agents-plugin-anthropic` supports arbitrary model IDs but has no
-`output_config.effort`, no prompt-cache control, and ignores `stop_reason: "refusal"`. The brief
-requires all three, so [`apps/agent/src/llm/anthropic.ts`](../../apps/agent/src/llm/anthropic.ts) is a
-small adapter adapted from the Apache-2.0 plugin:
+`CompanionOpenRouterLLM` ([`apps/agent/src/llm/openrouter.ts`](../../apps/agent/src/llm/openrouter.ts))
+is the default. It uses OpenRouter's OpenAI-compatible streaming API and:
 
-- maps `ChatContext` to Anthropic messages (merges same-role turns, guarantees a leading user turn);
-- puts a single `cache_control: { type: "ephemeral" }` on the first system block (the persona);
-- appends a per-turn safety instruction after the cache breakpoint;
-- sets `output_config.effort` and `max_tokens`, no sampling params, no prefill;
-- streams text deltas into `llm.LLMStream`;
-- emits the gentle fallback when `stop_reason` is `refusal` and no text was produced;
-- reports prompt/cache/completion token usage to LiveKit metrics.
+- maps `ChatContext` to OpenAI-style messages (merges same-role turns, guarantees a leading user turn);
+- puts Anthropic-style `cache_control` on the stable system block and appends the per-turn safety
+  instruction after it;
+- sends `reasoning.effort` low and `max_tokens` 300, no sampling params, no prefill;
+- pins the `anthropic` provider with fallbacks off and `data_collection: deny`;
+- detects `finish_reason`, `native_finish_reason: refusal` and `delta.refusal`, then emits the gentle
+  fallback;
+- reports prompt/cache/completion usage to LiveKit metrics.
 
-It is tool-free in Part 1. Adding tools later means mapping `toolCtx` and `tool_use` blocks; keep the
-cache breakpoint placement intact.
+`CompanionAnthropicLLM` ([`apps/agent/src/llm/anthropic.ts`](../../apps/agent/src/llm/anthropic.ts))
+is the direct fallback (`LLM_PROVIDER=anthropic`). It is adapted from the Apache-2.0 LiveKit Anthropic
+plugin and uses the native Messages API with `output_config.effort`, per-block `cache_control` and
+`stop_reason: refusal`.
+
+Both are tool-free in Part 1. Adding tools means mapping `tool_use`/`tool_result` (or OpenAI tool
+calls) and keeping the cache breakpoint placement intact.
 
 ---
 

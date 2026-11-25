@@ -39,7 +39,9 @@ Implementation: [`packages/core/src/guardrails/`](../../packages/core/src/guardr
    - Self-harm lexicon: kill myself, suicide/suicidal, end my life, hurt myself, self-harm, don't
      want to live / be here anymore.
 2. **Haiku classifier** — starts in parallel with text generation (awaited in voice):
-   - Model: `claude-haiku-5-5`, `effort: "low"`, structured output via `messages.parse`.
+   - Default: OpenRouter `anthropic/claude-haiku-5.5`, `reasoning.effort: low`, a JSON-schema
+     `response_format`, provider pinned to Anthropic, fallbacks off, `data_collection: deny`.
+   - Direct fallback (`LLM_PROVIDER=anthropic`): `claude-haiku-5-5`, effort low, `messages.parse`.
    - Schema: `{ category, confidence }` where category is one of
      `none | emergency | self_harm | scam | abuse | medical_question | distress`.
    - Input is the **masked** text; message content is wrapped in `<message>` and explicitly treated

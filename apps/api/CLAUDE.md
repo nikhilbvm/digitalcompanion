@@ -14,7 +14,8 @@ Express API for text chat, LiveKit tokens and admin data.
   ready.
 - Text chat is SSE (`meta`, `delta`, `flag`, `done`, `error`); keep the frame contract stable.
 - The persona block is cached; safety instructions are separate system blocks.
-- No `temperature`/`top_p`/`top_k`, no prefill. `claude-haiku-5-5`, effort low, check `stop_reason`.
+- No `temperature`/`top_p`/`top_k`, no prefill. OpenRouter (`anthropic/claude-haiku-5.5`) default;
+  direct `claude-haiku-5-5` when `LLM_PROVIDER=anthropic`; effort low; check refusal/stop reasons.
 - Persist masked text only. Flag details never contain raw identifiers.
 - `DATABASE_URL` and its credentials are server-only.
 - The classifier runs in parallel in text mode; pattern hits are synchronous and authoritative.
@@ -34,7 +35,7 @@ pnpm verify
 | Change | Location |
 |---|---|
 | Endpoint/SSE contract | `src/routes/`, `src/services/chat-turn.ts`, docs |
-| Anthropic request policy | `src/services/anthropic.ts` |
+| LLM request policy | `src/services/llm.ts`, `openrouter.ts`, `anthropic.ts` |
 | Persistence/masking | `src/services/store.ts` + core |
 | Token/dispatch metadata | `src/routes/livekit.ts` |
 | Config/env | `src/config.ts`, `.env.example`, `docs/local-dev.md` |

@@ -17,11 +17,13 @@ source cannot be used directly in those children.
 
 ## Configuration
 
-Required: `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
-`LIVEKIT_API_SECRET`, `DATABASE_URL`.
+Required: `DEEPGRAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`,
+`DATABASE_URL`, and either `OPENROUTER_API_KEY` (default) or `ANTHROPIC_API_KEY` when
+`LLM_PROVIDER=anthropic`.
 
-Optional: `AGENT_NAME` (default `companion`), `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `VOICE_MAX_TOKENS`,
-`VOICE_STT_MODEL` (default `nova-3`), `VOICE_TTS_MODEL` (default `aura-2-andromeda-en`).
+Optional: `AGENT_NAME` (default `companion`), `OPENROUTER_MODEL`, `OPENROUTER_PROVIDER`, `LLM_EFFORT`,
+`VOICE_MAX_TOKENS`, `VOICE_STT_MODEL` (default `nova-3`), `VOICE_TTS_MODEL` (default
+`aura-2-andromeda-en`).
 
 `AGENT_NAME` must match the name used by `POST /livekit/token`.
 
@@ -37,7 +39,8 @@ Optional: `AGENT_NAME` (default `companion`), `ANTHROPIC_MODEL`, `ANTHROPIC_EFFO
 ```
 src/main.ts              defineAgent + ServerOptions + cli.runApp
 src/companion-agent.ts   Agent subclass: onUserTurnCompleted, llmNode, ttsNode
-src/llm/anthropic.ts     custom llm.LLM/LLMStream (effort, cache, refusal)
+src/llm/openrouter.ts    OpenRouter llm.LLM/LLMStream (default)
+src/llm/anthropic.ts     direct Anthropic adapter (fallback)
 src/guardrail-nodes.ts   LLM stream + TTS sentence filtering, first-audio tap
 src/recorder.ts          masked turn/flag persistence over Postgres, ended_at
 src/config.ts            env loading + required-variable check

@@ -15,8 +15,9 @@ A voice + text AI companion for older adults. Monorepo: `apps/web` (Next.js), `a
 - Never store or log unmasked card/SSN/OTP/Medicare numbers. Mask before persistence; the voice
   recorder stores the spoken safe text.
 - `DATABASE_URL` and its credentials are server-only. Never use them in `apps/web` or `NEXT_PUBLIC_*`.
-- Claude requests: `claude-haiku-5-5`, no sampling params, no prefill, `output_config.effort` low,
-  cached persona block, check `stop_reason` including `refusal`.
+- LLM requests go through OpenRouter (`anthropic/claude-haiku-5.5`) by default, or direct Anthropic
+  when `LLM_PROVIDER=anthropic`. No sampling params, no prefill, effort low, cached persona block, and
+  check refusal/stop reasons.
 - The web UI must stay client-friendly for a later Capacitor wrapper.
 
 ## Commands

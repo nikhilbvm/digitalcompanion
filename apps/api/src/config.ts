@@ -8,12 +8,20 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(here, '../../../.env'), quiet: true });
 dotenv.config({ path: path.resolve(here, '../.env'), override: true, quiet: true });
 
-const effort = (process.env.ANTHROPIC_EFFORT ?? 'low') as
+const effort = (process.env.LLM_EFFORT ?? process.env.ANTHROPIC_EFFORT ?? 'low') as
   | 'low'
   | 'medium'
   | 'high'
   | 'xhigh'
   | 'max';
+
+const rawProvider = process.env.LLM_PROVIDER;
+const llmProvider =
+  rawProvider === 'anthropic' || rawProvider === 'openrouter'
+    ? rawProvider
+    : process.env.OPENROUTER_API_KEY
+      ? 'openrouter'
+      : 'anthropic';
 
 export const config = {
   // API_PORT is the local/monorepo name; PORT is what most cloud runtimes set.
@@ -22,8 +30,16 @@ export const config = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  llmProvider,
+  llmEffort: ['low', 'medium', 'high', 'xhigh', 'max'].includes(effort) ? effort : 'low',
   anthropicModel: process.env.ANTHROPIC_MODEL ?? 'claude-haiku-5-5',
-  anthropicEffort: ['low', 'medium', 'high', 'xhigh', 'max'].includes(effort) ? effort : 'low',
+  openrouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
+  openrouterModel: process.env.OPENROUTER_MODEL ?? 'anthropic/claude-haiku-5.5',
+  openrouterBaseUrl: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
+  openrouterProvider: process.env.OPENROUTER_PROVIDER ?? 'anthropic',
+  openrouterAllowFallbacks: process.env.OPENROUTER_ALLOW_FALLBACKS === 'true',
+  openrouterDataCollection:
+    process.env.OPENROUTER_DATA_COLLECTION === 'allow' ? ('allow' as const) : ('deny' as const),
   chatHistoryLimit: Number(process.env.CHAT_HISTORY_LIMIT ?? 20),
   maxReplyTokens: Number(process.env.MAX_REPLY_TOKENS ?? 500),
   agentName: process.env.AGENT_NAME ?? 'companion',
@@ -36,9 +52,15 @@ export const config = {
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
 } as const;
 
-export function configuredServices(): Record<string, boolean> {
+export const llmConfigured =
+  config.llmProvider === 'openrouter'
+    ? Boolean(config.openrouterApiKey)
+    : Boolean(config.anthropicApiKey);
+
+export function configuredServices(): Record<string, string | boolean> {
   return {
-    anthropic: Boolean(config.anthropicApiKey),
+    llm: llmConfigured,
+    llmProvider: config.llmProvider,
     deepgram: Boolean(process.env.DEEPGRAM_API_KEY),
     livekit: Boolean(config.livekitUrl && config.livekitApiKey && config.livekitApiSecret),
     database: Boolean(config.databaseUrl),

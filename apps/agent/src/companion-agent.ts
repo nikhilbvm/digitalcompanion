@@ -10,18 +10,18 @@ import {
 import type { AudioFrame } from '@livekit/rtc-node';
 import { buildSystemText, runInputGuardrail, type Person } from '@companion/core';
 import { filterLlmStream, filterTextForTts, tapFirstAudio } from './guardrail-nodes.js';
-import type { CompanionAnthropicLLM } from './llm/anthropic.js';
+import type { CompanionLLM } from './llm/types.js';
 import type { Recorder } from './recorder.js';
 
 export interface CompanionAgentOptions {
   person: Person;
   recorder: Recorder;
-  llm: CompanionAnthropicLLM;
+  llm: CompanionLLM;
 }
 
 export class CompanionAgent extends Agent {
   private readonly recorder: Recorder;
-  private readonly companionLLM: CompanionAnthropicLLM;
+  private readonly companionLLM: CompanionLLM;
   private turnSpeechEndedAt: number | null = null;
   private lastGuardrailMs = 0;
 

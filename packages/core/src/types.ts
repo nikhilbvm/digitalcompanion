@@ -79,6 +79,12 @@ export interface Message {
   createdAt: string;
 }
 
+/** Provider-neutral turn used by the text chat LLM adapters. */
+export interface ChatTurnMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface GuardrailFlag {
   id: string;
   conversationId: string;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { chatRequestSchema } from '@companion/core';
-import { config } from '../config.js';
+import { config, llmConfigured } from '../config.js';
 import { SseWriter } from '../sse.js';
 import { runChatTurn } from '../services/chat-turn.js';
 import { getStore } from '../services/store.js';
@@ -18,13 +18,21 @@ chatRouter.post('/chat', async (req, res) => {
     res.status(503).json({ error: 'not_configured', message: 'DATABASE_URL is not configured' });
     return;
   }
-  if (!config.anthropicApiKey) {
-    res.status(503).json({ error: 'not_configured', message: 'ANTHROPIC_API_KEY is not set' });
+  if (!llmConfigured) {
+    res.status(503).json({
+      error: 'not_configured',
+      message:
+        config.llmProvider === 'openrouter'
+          ? 'OPENROUTER_API_KEY is not set'
+          : 'ANTHROPIC_API_KEY is not set',
+    });
     return;
   }
 
   const controller = new AbortController();
-  req.on('close', () => {
+  // `req` can emit close once the body is consumed; `res` close means the
+  // client actually went away while the stream was open.
+  res.on('close', () => {
     if (!res.writableEnded) controller.abort();
   });
 

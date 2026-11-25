@@ -15,7 +15,7 @@ import {
 import { config } from '../config.js';
 import { NotFoundError } from '../errors.js';
 import type { SseWriter } from '../sse.js';
-import { streamAnthropicReply, toAnthropicMessages } from './anthropic.js';
+import { streamReply, toChatMessages } from './llm.js';
 import type { Store } from './store.js';
 
 const EMPTY_REPLY = "I'm here with you. What would you like to talk about?";
@@ -98,7 +98,7 @@ export async function runChatTurn({
     });
   }
 
-  const messages = toAnthropicMessages(history, patterns.maskedText);
+  const messages = toChatMessages(history, patterns.maskedText);
   const accumulator = new SentenceAccumulator();
   const outputFlags: GuardrailHit[] = [];
   let safeReply = '';
@@ -123,7 +123,7 @@ export async function runChatTurn({
   };
 
   try {
-    for await (const event of streamAnthropicReply({
+    for await (const event of streamReply({
       system,
       messages,
       signal,

@@ -53,16 +53,19 @@ ttsNode(text, settings):
   return tapFirstAudio(audio, log latency)
 ```
 
-## Custom LLM adapter
+## Custom LLM adapters
 
-`src/llm/anthropic.ts` is adapted from the Apache-2.0 LiveKit Anthropic plugin. Differences:
+`src/llm/openrouter.ts` is the default. It uses the OpenAI-compatible OpenRouter API and:
 
-- `output_config: { effort }` (low) and `max_tokens` 300.
-- `cache_control: { type: "ephemeral" }` on the first system block (persona).
-- Per-turn safety instruction after the cache breakpoint, consumed once.
-- Refusal → `REFUSAL_FALLBACK` text chunk when no text was emitted.
-- No sampling parameters, no prefill.
-- Tools are not mapped in Part 1.
+- sends `reasoning.effort` low and `max_tokens` 300;
+- puts Anthropic-style `cache_control` on the stable system block and appends the per-turn safety
+  instruction after it (consumed once);
+- pins the `anthropic` provider with no fallbacks and `data_collection: deny`;
+- maps `finish_reason` / `native_finish_reason` refusals to `REFUSAL_FALLBACK`;
+- maps no sampling parameters and no prefill, and does not map tools in Part 1.
+
+`src/llm/anthropic.ts` is the direct fallback (`LLM_PROVIDER=anthropic`), adapted from the
+Apache-2.0 LiveKit Anthropic plugin with the same policy using the native Messages API.
 
 ## Persistence
 

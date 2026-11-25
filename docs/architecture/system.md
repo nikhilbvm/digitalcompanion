@@ -1,7 +1,7 @@
 # System architecture
 
 Digital Companion is four TypeScript workspaces plus managed services. The browser never talks to
-the database or to Anthropic; it talks to the API and to LiveKit Cloud.
+the database or the LLM; it talks to the API and to LiveKit Cloud.
 
 ```
 ┌──────────────────────────── Browser ────────────────────────────┐
@@ -15,7 +15,7 @@ the database or to Anthropic; it talks to the API and to LiveKit Cloud.
 │ apps/agent                   │      │ apps/api (Express 5)         │
 │  LiveKit worker              │      │  POST /chat (SSE)            │
 │  Deepgram Nova-3 STT         │      │  POST /livekit/token         │
-│  CompanionAnthropicLLM       │      │  GET/POST /people            │
+│  CompanionOpenRouterLLM      │      │  GET/POST /people            │
 │  Deepgram Aura-2 TTS         │      │  GET /conversations[/:id]    │
 │  Silero VAD + turn detector  │      │  POST /conversations/:id/end │
 │  guardrails + recorder       │      │  guardrails + persistence    │
@@ -31,7 +31,8 @@ the database or to Anthropic; it talks to the API and to LiveKit Cloud.
                  └────────────────────────────────┘
 
 Shared: packages/core — persona, guardrails, types, Postgres pool, memory helpers.
-External: Anthropic (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (media + dispatch).
+External: OpenRouter → Anthropic (chat + classifier; direct Anthropic optional), Deepgram (STT/TTS),
+LiveKit Cloud (media + dispatch).
 ```
 
 ## Responsibilities
@@ -39,7 +40,7 @@ External: Anthropic (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (medi
 | Component | Owns | Must not |
 |---|---|---|
 | `apps/web` | Screens, accessibility, LiveKit client, SSE consumption, admin UI | Hold server secrets, use server-only Next features, write to the database |
-| `apps/api` | HTTP contract, SSE, token creation, persistence, Anthropic text calls | Contain voice-pipeline logic, import LiveKit agent code |
+| `apps/api` | HTTP contract, SSE, token creation, persistence, OpenRouter/Anthropic text calls | Contain voice-pipeline logic, import LiveKit agent code |
 | `apps/agent` | Voice room lifecycle, STT/LLM/TTS hooks, voice turn persistence | Serve HTTP, import API routes |
 | `packages/core` | Persona, guardrails, shared types, Postgres pool, memory helpers | Import an app, import LiveKit, use browser APIs |
 | `db` | Schema, indexes, RLS | Contain application logic |
@@ -69,7 +70,8 @@ Contract detail: [apps/api/docs/chat-stream.md](../../apps/api/docs/chat-stream.
 2. API creates/uses a `voice` conversation and mints a LiveKit token whose `roomConfig` dispatches
    the agent named `AGENT_NAME` with `{ personId, conversationId }` metadata.
 3. The agent worker receives the job, loads the person, starts an `AgentSession` with Deepgram
-   STT/TTS, Silero VAD, the LiveKit turn detector and `CompanionAnthropicLLM`.
+   STT/TTS, Silero VAD, the LiveKit turn detector and `CompanionOpenRouterLLM` (default) or
+   `CompanionAnthropicLLM` (fallback).
 4. Final transcript → input guardrail (patterns + classifier awaited) → per-turn safety instruction
    and masked user message persisted → Claude streams → each sentence filtered → Deepgram speaks.
 5. Assistant safe text and output flags are persisted by the recorder; latency is logged.
@@ -83,10 +85,10 @@ Detail: [voice-pipeline.md](voice-pipeline.md) and
 | Failure | Behavior |
 |---|---|
 | Database not configured | `/health` works; data routes return 503 `not_configured`; SSE `/chat` returns 503 JSON before streaming |
-| Anthropic key missing | `/chat` 503; agent exits at startup with the missing variable names |
-| Deepgram/LiveKit missing | agent exits at startup; text chat still works if Anthropic and the database are set |
+| LLM key missing | `/chat` 503; agent exits at startup with the missing variable names |
+| Deepgram/LiveKit missing | agent exits at startup; text chat still works if the LLM and database are set |
 | Classifier timeout/error | degrades to `none`; deterministic patterns still apply; reply is not blocked |
-| Anthropic refusal | gentle fallback line is emitted and persisted |
+| LLM refusal | gentle fallback line is emitted and persisted |
 | Client disconnects mid-chat | request aborts; partial safe reply is persisted; no error event |
 | LiveKit room disconnect | web shows ended; agent recorder closes the conversation |
 | Persistence error | logged; voice conversation continues (DB errors never cut audio) |

@@ -49,7 +49,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] LiveKit worker with explicit dispatch (`AGENT_NAME`)
 - [x] Job metadata → person/conversation; profile load
 - [x] Deepgram Nova-3 STT, Aura-2 TTS, Silero VAD, turn detector
-- [x] Custom Anthropic adapter: effort low, cached persona, refusal fallback
+- [x] OpenRouter default adapter (direct Anthropic fallback): effort low, cached system block, refusal fallback
 - [x] `onUserTurnCompleted` input guardrail and masking
 - [x] `llmNode` sentence filter + safe-text persistence; `ttsNode` second layer
 - [x] Recorder for user/assistant turns, flags, `ended_at`
@@ -100,5 +100,5 @@ pnpm build
 pnpm verify
 ```
 
-Manual checks need: Anthropic, Deepgram, LiveKit Cloud, a Postgres/RDS database, and a browser with
-a microphone.
+Manual checks need: OpenRouter (or direct Anthropic), Deepgram, LiveKit Cloud, a Postgres/RDS
+database, and a browser with a microphone.

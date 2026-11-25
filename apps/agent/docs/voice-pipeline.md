@@ -9,7 +9,8 @@ with the exact files and hooks in this app.
 |---|---|
 | `src/main.ts` | `defineAgent`, metadata, person load, `AgentSession`, greeting, close |
 | `src/companion-agent.ts` | `onUserTurnCompleted` (input guardrail), `llmNode` (output filter + persistence), `ttsNode` (second filter layer + latency) |
-| `src/llm/anthropic.ts` | `CompanionAnthropicLLM` + stream, request policy |
+| `src/llm/openrouter.ts` | `CompanionOpenRouterLLM` + stream, default request policy |
+| `src/llm/anthropic.ts` | `CompanionAnthropicLLM` + stream, direct fallback |
 | `src/guardrail-nodes.ts` | `filterLlmStream`, `filterTextForTts`, `tapFirstAudio` |
 | `src/recorder.ts` | Postgres user/assistant messages, flags, `ended_at` |
 | `src/config.ts` | env, `assertAgentConfig` |
@@ -21,7 +22,7 @@ t0  user stops speaking (VAD)
 t1  final transcript (Deepgram)
 t2  onUserTurnCompleted starts
 t3  guardrail done (patterns sync + classifier await)
-t4  Claude first token
+t4  LLM first token (OpenRouter → Claude by default)
 t5  llmNode filters the first complete sentence → context/transcript/TTS
 t6  TTS second-layer filter, first audio frame (logged)
 ```

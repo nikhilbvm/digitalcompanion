@@ -9,7 +9,7 @@ helpers. No app or LiveKit imports.
 |---|---|
 | `persona.ts` | `COMPANION_PERSONA`, `buildProfileBlock`, `buildSystemPrompt`, `buildSystemText`, safety lines, `safetyLineFor` |
 | `types.ts` | `Person`, `Conversation`, `Message`, `GuardrailFlag`, `MemoryNote`, row mappers, Zod input schemas, guardrail result shapes |
-| `guardrails/` | `checkInputPatterns`, `luhnValid`, `maskSensitive`, `classifyInput`, `runInputGuardrail`, `filterOutputSentence`, `filterOutput`, `highestGuardrailCategory`, `safetyInstructionFor` |
+| `guardrails/` | `checkInputPatterns`, `luhnValid`, `maskSensitive`, `classifyInput` (OpenRouter default, Anthropic fallback), `runInputGuardrail`, `filterOutputSentence`, `filterOutput`, `highestGuardrailCategory`, `safetyInstructionFor` |
 | `db.ts` | `createDbPool` (server-only Postgres pool for local/RDS) |
 | `memory.ts` | `addMemoryNote`, `listActiveMemoryNotes`, `deactivateMemoryNote`, `buildMemoryBlock` |
 | `text.ts` | `splitSentences`, `SentenceAccumulator` |

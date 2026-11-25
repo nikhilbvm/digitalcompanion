@@ -50,6 +50,9 @@ importers:
       dotenv:
         specifier: ^18.0.10
         version: 18.0.10
+      openai:
+        specifier: ^7.64.0
+        version: 7.64.0(ws@8.23.0)(zod@4.6.7)
       pg:
         specifier: ^8.23.1
         version: 8.23.1
@@ -99,6 +102,9 @@ importers:
       livekit-server-sdk:
         specifier: ^2.20.1
         version: 2.20.1
+      openai:
+        specifier: ^7.64.0
+        version: 7.64.0(ws@8.23.0)(zod@4.6.7)
       pg:
         specifier: ^8.23.1
         version: 8.23.1
@@ -179,6 +185,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^1.14.0
         version: 1.14.0(zod@4.6.7)
+      openai:
+        specifier: ^7.64.0
+        version: 7.64.0(ws@8.23.0)(zod@4.6.7)
       pg:
         specifier: ^8.23.1
         version: 8.23.1
@@ -2725,6 +2734,33 @@ packages:
       '@smithy/hash-node':
         optional: true
       '@smithy/signature-v4':
+        optional: true
+      ws:
+        optional: true
+      zod:
+        optional: true
+
+  openai@7.64.0:
+    resolution: {integrity: sha512-2CpWvKic4bayEcX1uHhYc1KWauVIlV9e/8K8VVnvbosqL4En0OtesbY2qFCZHFF9X4dT1BKW4Dr+ncep9bh3Dw==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      google-auth-library: '>=9.15.1 <12'
+      undici: '>=5 <9'
+      ws: ^8.21.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      google-auth-library:
+        optional: true
+      undici:
         optional: true
       ws:
         optional: true
@@ -5726,6 +5762,11 @@ snapshots:
       onnxruntime-common: 1.24.3
 
   openai@6.49.0(ws@8.23.0)(zod@4.6.7):
+    optionalDependencies:
+      ws: 8.23.0
+      zod: 4.6.7
+
+  openai@7.64.0(ws@8.23.0)(zod@4.6.7):
     optionalDependencies:
       ws: 8.23.0
       zod: 4.6.7

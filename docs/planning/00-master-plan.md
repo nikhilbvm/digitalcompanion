@@ -77,7 +77,8 @@ it now.
                      └──────────────────────────────────┘
 
 Shared code: packages/core — persona, guardrails, types, Postgres pool, memory helpers.
-External: Anthropic API (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (media + dispatch).
+External: OpenRouter → Claude (chat + classifier; direct Anthropic optional), Deepgram (STT/TTS),
+LiveKit Cloud (media + dispatch).
 ```
 
 Key decisions:
@@ -86,7 +87,7 @@ Key decisions:
 - **No server-only Next features in UI** — the web app only calls `apps/api` and LiveKit; this keeps
   Capacitor wrapping possible.
 - **Voice and text share persona + guardrails** from `packages/core`; the voice LLM adapter is the
-  only agent-specific copy of Anthropic request policy.
+  only agent-specific copy of the OpenRouter/Anthropic request policy.
 - **Database credentials stay server-side** (API and agent only). The browser never sees `DATABASE_URL`.
 - **Explicit agent dispatch**: the token endpoint attaches a `RoomAgentDispatch` to the room config,
   so joining a room pulls in the named agent worker.
@@ -147,7 +148,7 @@ digitalcompanion/
 │   │   ├── postcss.config.mjs
 │   │   └── tsconfig.json
 │   │
-│   ├── api/                       # Express + Anthropic SDK
+│   ├── api/                       # Express + OpenRouter/Anthropic SDK
 │   │   ├── CLAUDE.md
 │   │   ├── README.md
 │   │   ├── Dockerfile
@@ -165,7 +166,9 @@ digitalcompanion/
 │   │   │   │   ├── conversations.ts
 │   │   │   │   └── health.ts
 │   │   │   ├── services/
-│   │   │   │   ├── anthropic.ts   # streaming request + policy
+│   │   │   │   ├── llm.ts         # provider dispatcher
+│   │   │   │   ├── openrouter.ts  # OpenRouter streaming + policy
+│   │   │   │   ├── anthropic.ts   # direct Anthropic fallback
 │   │   │   │   ├── chat-turn.ts   # guardrail → LLM → output filter → persist
 │   │   │   │   ├── livekit.ts     # token + room configuration
 │   │   │   │   └── persistence.ts
@@ -183,7 +186,8 @@ digitalcompanion/
 │       ├── src/
 │       │   ├── main.ts            # defineAgent + ServerOptions + cli.runApp
 │       │   ├── companion-agent.ts # voice.Agent subclass + hooks
-│       │   ├── llm/anthropic.ts   # custom llm.LLM/LLMStream adapter (Haiku 5.5)
+│       │   ├── llm/openrouter.ts  # default llm.LLM adapter
+│       │   ├── llm/anthropic.ts   # direct Anthropic fallback
 │       │   ├── guardrail-nodes.ts # LLM-stream + TTS sentence filters
 │       │   ├── recorder.ts        # turn persistence + latency logging
 │       │   └── config.ts
@@ -284,7 +288,8 @@ Public surface exported from `src/index.ts`:
   - `maskSensitive(text)`.
 - Memory helpers: `addMemoryNote`, `listActiveMemoryNotes`, `deactivateMemoryNote`.
 
-Core must not import LiveKit. It may import `@anthropic-ai/sdk` (classifier), `pg`, `zod`.
+Core must not import LiveKit. It may import `openai` (OpenRouter classifier), `@anthropic-ai/sdk`
+(direct classifier fallback), `pg`, `zod`.
 
 ### `apps/api`
 
@@ -316,8 +321,9 @@ in parallel) → persist masked user message → stream Claude with persona + pr
 instruction → sentence-level output filter → persist safe assistant message → emit `done` → log
 latency. On refusal (`stop_reason: "refusal"`) emit the gentle fallback line.
 
-Anthropic request policy: `claude-haiku-5-5`, no `temperature`/`top_p`/`top_k`, no prefill,
-`output_config: { effort: "low" }`, `cache_control` on the persona block, check `stop_reason`.
+LLM request policy: OpenRouter `anthropic/claude-haiku-5.5` by default (direct `claude-haiku-5-5` when
+`LLM_PROVIDER=anthropic`), no `temperature`/`top_p`/`top_k`, no prefill, effort low, cached persona
+block, provider pinned to Anthropic, check refusal/finish reasons.
 
 ### `apps/agent`
 
@@ -326,7 +332,8 @@ LiveKit worker with `agentName: "companion"` (explicit dispatch). On job start:
 1. Parse `ctx.job.metadata` → `{ personId, conversationId }`; load person + profile.
 2. Build `voice.Agent` instructions from `buildSystemPrompt(person)`.
 3. Start `voice.AgentSession` with Deepgram `STT({ model: 'nova-3', language: 'en-US' })`,
-   Deepgram `TTS({ model: 'aura-2-...', sampleRate: 24000 })`, custom Anthropic LLM, Silero VAD,
+   Deepgram `TTS({ model: 'aura-2-...', sampleRate: 24000 })`, OpenRouter LLM (Anthropic fallback),
+   Silero VAD,
    `inference.TurnDetector()`.
 4. `session.start({ agent, room: ctx.room })`, then greet with `generateReply`.
 5. Hooks:
@@ -340,7 +347,8 @@ LiveKit worker with `agentName: "companion"` (explicit dispatch). On job start:
 6. Log speech-end → first-audio-out latency per turn.
 
 Custom LLM adapter: subclass `llm.LLM` / `llm.LLMStream` (adapted from the Apache-2.0 LiveKit
-Anthropic plugin) with our request policy, prompt caching and refusal fallback. This is needed
+Anthropic plugin) with our request policy, prompt caching and refusal fallback. The default voice
+adapter uses OpenRouter's OpenAI-compatible API; the direct Anthropic adapter remains a fallback. This is needed
 because the stock plugin has no `output_config.effort`, no cache control and ignores `stop_reason`.
 
 ### `apps/web`
@@ -483,7 +491,10 @@ Turn: mic → LiveKit Cloud → agent STT (Nova-3) → VAD endpointing + turn de
 `.env.example` (root) is the single template; each app also has one for independent deploys.
 
 ```
-ANTHROPIC_API_KEY=
+LLM_PROVIDER=openrouter
+LLM_EFFORT=low
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=anthropic/claude-haiku-5.5
 DEEPGRAM_API_KEY=
 LIVEKIT_URL=
 LIVEKIT_API_KEY=
@@ -608,8 +619,8 @@ Each phase is one or more conventional commits, pushed to `origin/main`.
 | 2 | Docs + agents | README, docs/main, architecture docs, AGENTS/CLAUDE per app, Copilot, .claude settings, history, cross-links | `docs: establish project documentation and agent operating system` |
 | 3 | Database | `0001_init.sql`, seed, db README | `feat(db): add initial schema` |
 | 4 | Core | types, persona, guardrails, classifier, pg pool, memory, tests | `feat(core): add persona, guardrails and shared contracts` |
-| 5 | API | Express app, chat SSE, token, people/conversations, anthropic policy, tests/docs | `feat(api): add chat, voice token and admin endpoints` |
-| 6 | Agent | LiveKit worker, custom Anthropic LLM, hooks, recorder, docs | `feat(agent): add LiveKit voice companion` |
+| 5 | API | Express app, chat SSE, token, people/conversations, LLM policy, tests/docs | `feat(api): add chat, voice token and admin endpoints` |
+| 6 | Agent | LiveKit worker, OpenRouter/Anthropic LLM, hooks, recorder, docs | `feat(agent): add LiveKit voice companion` |
 | 7 | Web | companion screen, voice/text flows, admin, styles | `feat(web): add large-type companion and admin screens` |
 | 8 | CI/DevOps | ci.yml, docker-publish, devops README/scripts, Dockerfiles | `ci: add build and image pipelines` |
 | 9 | Verify | install, lint, typecheck, tests, build; fix; final README + decision log; push | `chore: verify part 1 acceptance` |

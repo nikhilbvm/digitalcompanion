@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { Message, SystemPromptBlock } from '@companion/core';
+import type { ChatTurnMessage, SystemPromptBlock } from '@companion/core';
 import { config } from '../config.js';
 import { ConfigError } from '../errors.js';
 
@@ -17,7 +17,7 @@ export function getAnthropic(): Anthropic {
 
 export interface AnthropicReplyParams {
   system: SystemPromptBlock[];
-  messages: Anthropic.MessageParam[];
+  messages: ChatTurnMessage[];
   maxTokens?: number;
   signal?: AbortSignal;
 }
@@ -40,9 +40,12 @@ export async function* streamAnthropicReply(
       model: config.anthropicModel,
       max_tokens: params.maxTokens ?? config.maxReplyTokens,
       system: params.system as Anthropic.TextBlockParam[],
-      messages: params.messages,
+      messages: params.messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })) as Anthropic.MessageParam[],
       stream: true,
-      output_config: { effort: config.anthropicEffort },
+      output_config: { effort: config.llmEffort },
     },
     { signal: params.signal },
   );
@@ -63,20 +66,4 @@ export async function* streamAnthropicReply(
   }
 
   yield { type: 'done', stopReason, refusalCategory };
-}
-
-export function toAnthropicMessages(
-  history: Message[],
-  currentUserText: string,
-): Anthropic.MessageParam[] {
-  const messages: Anthropic.MessageParam[] = history.map((message) => ({
-    role: message.role,
-    content: message.text,
-  }));
-
-  // Anthropic requires the conversation to start with a user turn.
-  while (messages[0]?.role === 'assistant') messages.shift();
-
-  messages.push({ role: 'user', content: currentUserText });
-  return messages;
 }

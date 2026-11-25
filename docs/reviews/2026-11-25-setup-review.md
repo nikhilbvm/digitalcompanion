@@ -17,6 +17,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Run all apps locally | **Good** — verified web/api/agent start paths; real voice needs keys |
 | Build all apps in CI | **Good** — lint, typecheck, 66 tests, Next/tsup builds |
 | Database (AWS-only) | **Good** — Postgres via `pg` for local Docker/RDS; migration and Store SQL exercised in CI |
+| LLM provider | **Good** — OpenRouter default (`anthropic/claude-haiku-5.5`) with direct Anthropic fallback; live text, classifier, guardrail and voice-adapter calls verified |
 | Build API/agent containers | **Good** — CI builds both, smoke-tests API `/health`, and confirms the agent image boots to its config check |
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
@@ -27,10 +28,13 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 - `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm verify`.
 - CI applies the schema to a real Postgres service and exercises the Store SQL (`db-smoke.ts`).
 - Local Postgres: `pnpm db:up`, `pnpm db:migrate`, `pnpm db:seed`; Store smoke test; API `/health`
-  with `database:true`, `/people` reads and writes, `/chat` 503 without Anthropic.
+  with `database:true`, `/people` reads and writes, `/chat` 503 without an LLM key.
 - Built API health and 503 behavior; `PORT` fallback; dev-mode `tsx` API.
 - Built web `/` and `/admin`; root `.env` values inlined into the Next build.
 - Agent missing-env behavior and build.
+- Live OpenRouter text chat: benign reply, scam turn (`category: scam`, classifier 0.90, masked card,
+  flags), emergency turn (911 guidance), ~0.6–0.8s TTFT.
+- Voice LLM adapter in isolation: OpenRouter streaming returned `VOICE OK` with usage.
 - Markdown link integrity across all docs.
 - Docker install/build/deploy sequence simulated outside Docker; both Dockerfiles built by CI.
 - GitHub Actions runs on every push, including the new container-build job.
@@ -45,6 +49,8 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | Dockerfiles relied on corepack auto-resolution | Less deterministic builds | `corepack prepare pnpm@10.34.9 --activate` in both Dockerfiles |
 | CI never built the Dockerfiles | Container regressions could ship unnoticed | New `docker` job builds both images, starts the API to check `/health`, and runs the agent with no env to prove the bundle/native modules load; both pass |
 | Supabase was the database | Not AWS-only | Replaced with a server-side `pg` pool, `db/` migrations, Docker Postgres locally and an RDS target; CI applies the schema and runs a Store smoke test |
+| SSE route aborted immediately after the request body | Live text chat returned only `meta` | Client-disconnect detection moved from `req` to `res` close; live streaming then worked |
+| LLM was direct-Anthropic only | Existing OpenRouter key could not be used | Added OpenRouter as the default provider for text, classifier and voice, with direct Anthropic as `LLM_PROVIDER=anthropic` fallback; live tests passed |
 | Cloud runtime assumptions were under-documented | Hosting mistakes likely | Added cloud runtime notes to [docs/devops.md](../devops.md) and the env contract |
 
 ## Remaining gaps before a cloud deployment
@@ -92,8 +98,8 @@ docker build -f apps/agent/Dockerfile -t companion-agent .
 docker run --rm --env-file .env companion-agent
 ```
 
-- Outbound to LiveKit Cloud, Deepgram and Anthropic; RDS over the private VPC network. No inbound port
-  or load balancer.
+- Outbound to OpenRouter/Anthropic, Deepgram and LiveKit Cloud; RDS over the private VPC network. No
+  inbound port or load balancer.
 - `AGENT_NAME` must match the API's token dispatch name.
 - Needs `ffmpeg`/CA certificates, included in the image.
 

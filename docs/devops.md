@@ -63,7 +63,7 @@ Same variable contract as [`.env.example`](../.env.example). See
 | Voice agent (`apps/agent`) | **AWS ECS Fargate** | Long-lived worker with native modules; outbound to LiveKit only, no inbound listener. |
 | Database | **Amazon RDS for PostgreSQL** | Private subnets, encryption at rest, automated backups. Aurora Serverless v2 is the scale-up option. |
 | Media / voice | **LiveKit Cloud** | Managed rooms, agent dispatch, TURN. |
-| LLM / STT / TTS | **Anthropic / Deepgram** | Managed APIs. |
+| LLM / STT / TTS | **OpenRouter → Anthropic / Deepgram** | OpenRouter is the default LLM gateway (Claude Haiku 5.5); direct Anthropic is an optional fallback. Deepgram handles STT/TTS. |
 | Secrets | AWS Secrets Manager + GitHub Environments (Part 2) | No secrets in git. |
 
 Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` in the web **build** environment; they
@@ -85,11 +85,11 @@ AWS
   ├── ECS Fargate: api, agent
   ├── RDS PostgreSQL: private subnets, encryption, backups, TLS
   ├── ALB + WAF (or API Gateway + Lambda for api)
-  ├── Secrets Manager: ANTHROPIC/DEEPGRAM/LIVEKIT/DATABASE_URL
+  ├── Secrets Manager: OPENROUTER/ANTHROPIC/DEEPGRAM/LIVEKIT/DATABASE_URL
   ├── CloudWatch: logs, metrics, alarms
   └── S3: optional exports/backups
 
-Managed: Amazon RDS · LiveKit Cloud · Anthropic · Deepgram
+Managed: Amazon RDS · LiveKit Cloud · OpenRouter (Anthropic upstream) · Deepgram
 Web: S3 + CloudFront (static Next export); Capacitor wrapper later
 ```
 
@@ -104,7 +104,7 @@ API Gateway remains an option because `createApp()` is separate from `listen()`.
 - **SSE streaming.** `POST /chat` is a long-lived server-sent-event response. Fargate behind an ALB
   handles it naturally; API Gateway HTTP APIs do not stream responses, and Lambda response streaming
   would require a Function URL and a different front door.
-- **Warm, stateful process.** The API keeps a `pg` connection pool and warm Anthropic/Express state.
+- **Warm, stateful process.** The API keeps a `pg` connection pool and warm OpenRouter/Anthropic/Express state.
   Lambda would need RDS Proxy or careful pool management per invocation, plus cold-start latency.
 - **One operational model.** API and agent share the same VPC, RDS security group, Secrets Manager
   entries, image pipeline, task roles and CloudWatch logs. Running the API on Lambda would add a

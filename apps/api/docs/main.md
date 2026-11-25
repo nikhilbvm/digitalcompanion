@@ -8,7 +8,7 @@ Base URL locally: `http://localhost:4000`. JSON bodies; errors are
 ```http
 GET /health
 200 {"ok":true,"version":"0.1.0","uptime":12.3,
-     "configured":{"anthropic":true,"deepgram":true,"livekit":true,"database":true}}
+     "configured":{"llm":true,"llmProvider":"openrouter","deepgram":true,"livekit":true,"database":true}}
 ```
 
 `configured` is booleans only; it never reveals values. Use it first when debugging. The database
@@ -91,18 +91,20 @@ so connecting dispatches the worker.
 |---|---|---|
 | 400 | `bad_request` | Zod validation failed |
 | 404 | `not_found` | person/conversation missing or wrong person |
-| 503 | `not_configured` | Database/Anthropic/LiveKit env missing |
+| 503 | `not_configured` | Database/LLM/LiveKit env missing |
 | 500 | `internal_error` | unexpected server error (message hidden) |
 
-## Request policy (Anthropic)
+## Request policy (LLM)
 
-`claude-haiku-5-5`; `output_config.effort` from `ANTHROPIC_EFFORT` (default low); no sampling
-parameters; no assistant prefill; `cache_control` on the persona block; `stop_reason` checked,
-including `refusal` → `REFUSAL_FALLBACK`.
+Default: OpenRouter `anthropic/claude-haiku-5.5`, `reasoning.effort` low, Anthropic per-block
+`cache_control` on the persona/profile system block, provider pinned to `anthropic` with fallbacks
+disabled and `data_collection: deny`. Direct Anthropic is available with `LLM_PROVIDER=anthropic`
+(`output_config.effort` low, cached persona, no sampling parameters, no prefill). Refusals append
+`REFUSAL_FALLBACK`.
 
 ## Persistence
 
-`src/services/store.ts` is the only writer over a `pg` pool. It masks `messages.text` again
+`src/services/store.ts` is the only database writer over a `pg` pool. It masks `messages.text` again
 defensively and masks flag detail. Conversation history for the LLM is capped by `CHAT_HISTORY_LIMIT` (default 20 messages).
 
 ## Tests / checks

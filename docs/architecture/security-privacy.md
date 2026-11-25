@@ -14,8 +14,8 @@ sensitive. Part 1 is a local POC; it is not ready for public deployment.
 | Conversation transcripts | Sensitive | `messages` |
 | Guardrail flags (scam, emergency, self-harm) | Sensitive | `guardrail_flags` |
 | Memory notes (Part 2) | Sensitive | `memory_notes` |
-| API keys and DB credentials (Anthropic, Deepgram, LiveKit, DATABASE_URL) | Secret | `.env` / secret manager only |
-| Prompt-cache content | Derived from persona + profile | Anthropic cache, TTL-limited |
+| API keys and DB credentials (OpenRouter/Anthropic, Deepgram, LiveKit, DATABASE_URL) | Secret | `.env` / secret manager only |
+| Prompt-cache content | Derived from persona + profile | OpenRouter/Anthropic cache, TTL-limited |
 
 ---
 
@@ -23,7 +23,8 @@ sensitive. Part 1 is a local POC; it is not ready for public deployment.
 
 | Secret | Server-only? | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | API + agent |
+| `OPENROUTER_API_KEY` | Yes (default) | API + agent; one key for many models |
+| `ANTHROPIC_API_KEY` | Optional | Direct fallback when `LLM_PROVIDER=anthropic` |
 | `DEEPGRAM_API_KEY` | Yes | agent |
 | `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Yes | API (token) + agent (worker) |
 | `DATABASE_URL` | Yes | API + agent; Postgres user for local/RDS |
@@ -54,9 +55,10 @@ Rules:
 5. **No audit log.** Admin views are unauthenticated and unlogged. Part 2 adds an audit trail.
 6. **No human review queue.** Guardrail flags are visible in admin but nothing routes emergencies to a
    human. Part 2 designs an escalation policy; the app is explicitly not an emergency service.
-7. **Third-party processing.** Transcripts/audio pass through LiveKit Cloud, Deepgram and Anthropic;
-   prompts include care notes. The database is in AWS RDS. Part 2 needs a data-processing review and
-   consent language.
+7. **Third-party processing.** Transcripts/audio pass through LiveKit Cloud, Deepgram, OpenRouter and
+   Anthropic; prompts include care notes. The database is in AWS RDS. Part 2 needs a data-processing
+   review and consent language. OpenRouter routing is pinned to Anthropic with `data_collection: deny`
+   for this app.
 8. **PII in prompt cache.** The persona is cached; profile blocks are not marked cacheable in Part 1.
    Verify cache behavior and retention with Anthropic's policy before production.
 9. **Public GitHub repo.** The repository is public. Keep no secrets, real names, care notes or
@@ -95,7 +97,7 @@ again defensively.
 - [ ] Retention, export and delete flows
 - [ ] Audit logging for admin access
 - [ ] Human escalation policy for emergency/self-harm flags
-- [ ] Data-processing agreements (Anthropic, Deepgram, LiveKit, AWS)
+- [ ] Data-processing agreements (OpenRouter, Anthropic, Deepgram, LiveKit, AWS)
 - [ ] Incident response and key rotation runbook
 - [ ] Penetration test / threat model review
 - [ ] Accessibility review with older adults

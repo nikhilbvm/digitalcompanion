@@ -14,6 +14,7 @@ import { createDbPool, mapPerson, type PersonRow } from '@companion/core';
 import { assertAgentConfig, config } from './config.js';
 import { CompanionAgent } from './companion-agent.js';
 import { CompanionAnthropicLLM } from './llm/anthropic.js';
+import { CompanionOpenRouterLLM } from './llm/openrouter.js';
 import { Recorder } from './recorder.js';
 
 interface DispatchMetadata {
@@ -73,12 +74,24 @@ export default defineAgent({
 
     const recorder = new Recorder(db, metadata.conversationId);
 
-    const llm = new CompanionAnthropicLLM({
-      apiKey: config.anthropicApiKey,
-      model: config.anthropicModel,
-      effort: config.anthropicEffort,
-      maxTokens: config.voiceMaxTokens,
-    });
+    const llm =
+      config.llmProvider === 'openrouter'
+        ? new CompanionOpenRouterLLM({
+            apiKey: config.openrouterApiKey,
+            model: config.openrouterModel,
+            baseUrl: config.openrouterBaseUrl,
+            effort: config.llmEffort,
+            maxTokens: config.voiceMaxTokens,
+            provider: config.openrouterProvider,
+            allowFallbacks: config.openrouterAllowFallbacks,
+            dataCollection: config.openrouterDataCollection,
+          })
+        : new CompanionAnthropicLLM({
+            apiKey: config.anthropicApiKey,
+            model: config.anthropicModel,
+            effort: config.llmEffort,
+            maxTokens: config.voiceMaxTokens,
+          });
 
     const agent = new CompanionAgent({ person, recorder, llm });
     const vad = await silero.VAD.load();

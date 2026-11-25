@@ -32,7 +32,8 @@ terraform/
   disconnects and error logs.
 - The web bucket is private; CloudFront accesses it via OAC (or use the S3 website endpoint when a
   directory-index rewrite is simpler). Add a CloudFront Function if using an OAC + REST origin.
-- Store `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `LIVEKIT_*` and `DATABASE_URL` in Secrets Manager
+- Store `OPENROUTER_API_KEY` (or `ANTHROPIC_API_KEY` for direct), `DEEPGRAM_API_KEY`, `LIVEKIT_*` and
+  `DATABASE_URL` in Secrets Manager
   and inject them through the task execution role. RDS is reachable only from the app security group.
 
 ## State

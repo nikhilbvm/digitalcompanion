@@ -8,7 +8,7 @@ This repository is a monorepo containing the web app, API, LiveKit voice agent, 
 database migrations, DevOps/CI, documentation, and the agent operating system used to develop it.
 
 > **Status: Part 1 (local POC).** The end-to-end pipeline is implemented. The manual voice demo
-> requires real Anthropic, Deepgram, LiveKit Cloud and Postgres/RDS access. Part 2 (memory capture,
+> requires a real OpenRouter key, Deepgram, LiveKit Cloud and Postgres/RDS access. Part 2 (memory capture,
 > scheduled check-in calls, AWS/Terraform) is planned in
 > [docs/planning/02-part2-roadmap.md](docs/planning/02-part2-roadmap.md).
 
@@ -66,7 +66,7 @@ pnpm install
 
 # 2. Configure
 cp .env.example .env
-# fill in: ANTHROPIC_API_KEY, DEEPGRAM_API_KEY, LIVEKIT_*, DATABASE_URL, NEXT_PUBLIC_*
+# fill in: OPENROUTER_API_KEY, DEEPGRAM_API_KEY, LIVEKIT_*, DATABASE_URL, NEXT_PUBLIC_*
 
 # 3. Start local Postgres and apply the schema
 pnpm db:up
@@ -106,7 +106,7 @@ Browser (Next.js, Capacitor-ready)
   ├── livekit-client ──► LiveKit Cloud ──► apps/agent (Deepgram STT/TTS + Claude)
   └── fetch/SSE ───────► apps/api (Express) ──► Postgres (local / RDS)
                                 │
-                                └── Anthropic API (chat + classifier)
+                                └── OpenRouter → Claude Haiku 5.5 (chat + classifier)
 ```
 
 - [docs/architecture/system.md](docs/architecture/system.md) — components and data flow

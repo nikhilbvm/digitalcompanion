@@ -10,8 +10,15 @@ if [ -f .env ]; then
   set +a
 fi
 
+llm_provider="${LLM_PROVIDER:-openrouter}"
+if [ "$llm_provider" = "anthropic" ]; then
+  llm_key_name="ANTHROPIC_API_KEY"
+else
+  llm_key_name="OPENROUTER_API_KEY"
+fi
+
 missing_core=()
-for name in ANTHROPIC_API_KEY DATABASE_URL; do
+for name in "$llm_key_name" DATABASE_URL; do
   if [ -z "${!name:-}" ]; then missing_core+=("$name"); fi
 done
 

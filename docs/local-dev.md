@@ -1,7 +1,8 @@
 # Local development
 
-Part 1 runs on a laptop with three managed accounts (Anthropic, Deepgram, LiveKit Cloud) and a
-Postgres database. Use the included Docker Postgres locally; Amazon RDS is the cloud target.
+Part 1 runs on a laptop with managed OpenRouter, Deepgram and LiveKit Cloud accounts and a Postgres
+database. OpenRouter is the default LLM gateway (Claude Haiku 5.5); direct Anthropic is optional.
+Use the included Docker Postgres locally; Amazon RDS is the cloud target.
 
 ---
 
@@ -20,11 +21,16 @@ Postgres database. Use the included Docker Postgres locally; Amazon RDS is the c
 
 ## 2. Create the accounts
 
-### Anthropic
+### OpenRouter (default)
 
-1. Create an API key at [console.anthropic.com](https://console.anthropic.com).
-2. The app uses `claude-haiku-5-5` for chat and the safety classifier.
-3. Put it in `.env` as `ANTHROPIC_API_KEY`.
+1. Create an API key at [openrouter.ai](https://openrouter.ai) (or reuse an existing OpenRouter key for local testing).
+2. The app uses `anthropic/claude-haiku-5.5` for chat, voice and the safety classifier.
+3. Put it in `.env` as `OPENROUTER_API_KEY` and keep `LLM_PROVIDER=openrouter`.
+4. The default config pins the `anthropic` provider, disables fallbacks, and requests
+   `data_collection: deny`. Change `OPENROUTER_PROVIDER`/model only deliberately.
+
+Direct Anthropic is optional: set `LLM_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` if you want to
+bypass OpenRouter. Do not add both keys to the browser or any `NEXT_PUBLIC_*` variable.
 
 ### Deepgram
 
@@ -72,7 +78,11 @@ Fill `.env`:
 
 | Variable | Required | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | yes | chat + classifier |
+| `LLM_PROVIDER` | no | `openrouter` (default) or `anthropic` |
+| `OPENROUTER_API_KEY` | yes (default) | chat, voice and classifier |
+| `OPENROUTER_MODEL` | no | default `anthropic/claude-haiku-5.5` |
+| `OPENROUTER_PROVIDER` | no | default `anthropic`; clear for non-Anthropic models |
+| `ANTHROPIC_API_KEY` | only if direct | fallback when `LLM_PROVIDER=anthropic` |
 | `DEEPGRAM_API_KEY` | voice | STT/TTS |
 | `LIVEKIT_URL` | voice | `wss://…` |
 | `LIVEKIT_API_KEY` | voice | |
@@ -86,8 +96,9 @@ Fill `.env`:
 | `API_PORT` | no | default `4000`; cloud runtimes may inject `PORT` instead |
 | `CORS_ORIGIN` | no | default `http://localhost:3000` |
 
-Optional tuning: `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`,
-`VOICE_MAX_TOKENS`, `VOICE_STT_MODEL`, `VOICE_TTS_MODEL`.
+Optional tuning: `LLM_EFFORT`, `ANTHROPIC_MODEL`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`,
+`VOICE_MAX_TOKENS`, `VOICE_STT_MODEL`, `VOICE_TTS_MODEL`, `OPENROUTER_BASE_URL`,
+`OPENROUTER_ALLOW_FALLBACKS`, `OPENROUTER_DATA_COLLECTION`.
 
 ---
 
@@ -168,6 +179,12 @@ pnpm verify      # all of the above
 credentials and a browser. The CI database job applies the schema and exercises the store against a
 throwaway Postgres.
 
+Optional manual LLM check (uses your OpenRouter key, one tiny call):
+
+```bash
+pnpm --filter @companion/agent smoke:llm
+```
+
 ---
 
 ## 7. Troubleshooting
@@ -176,14 +193,14 @@ throwaway Postgres.
 |---|---|
 | `/health` returns `configured.database:false` | Set `DATABASE_URL`, start Postgres, restart API |
 | `/people` returns 503 `not_configured` | Same as above |
-| `/chat` returns 503 | Missing Anthropic or database config |
+| `/chat` returns 503 | Missing LLM key (`OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY`) or database config |
 | Web fetch fails / CORS | API not running, or `CORS_ORIGIN` does not match the web origin |
-| Agent exits with "missing environment variables" | Fill the listed variables; voice needs LiveKit, Deepgram, DATABASE_URL and Anthropic |
+| Agent exits with "missing environment variables" | Fill the listed variables; voice needs LiveKit, Deepgram, DATABASE_URL and the selected LLM key |
 | Agent starts but never joins the room | `AGENT_NAME` mismatch; LiveKit URL/key wrong; check worker logs and token response |
 | Mic permission denied | Allow the mic in browser settings; the web app asks once before connecting |
 | No audio, transcript works | Deepgram TTS key/model issue; check agent logs; try the default `aura-2-andromeda-en` |
 | Transcript empty on voice | Text stream handler must be registered before connecting (it is); check LiveKit text streams and agent output sync |
-| `[guardrails] classifier degraded` | Anthropic key missing/timeout; patterns still work; check `ANTHROPIC_API_KEY` |
+| `[guardrails] classifier degraded` | LLM key missing/timeout/structured-output rejection; patterns still work; check `OPENROUTER_API_KEY` and the API logs |
 | Port 3000/4000 busy | Change `API_PORT`/`next dev -p`; update `NEXT_PUBLIC_API_BASE_URL` |
 | Next build fails after config changes | Run `pnpm --filter @companion/web build` and read the first error; ensure `transpilePackages` still includes `@companion/core` |
 

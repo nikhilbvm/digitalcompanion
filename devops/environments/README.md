@@ -7,9 +7,16 @@ Secrets Manager. This file lists **names**, never values.
 
 | Variable | dev | prod | Secret? |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | yes | yes | **yes** |
+| `LLM_PROVIDER` | yes (openrouter) | yes (openrouter) | no |
+| `LLM_EFFORT` | optional | optional | no |
+| `OPENROUTER_API_KEY` | yes (default) | yes (default) | **yes** |
+| `OPENROUTER_MODEL` | optional | optional | no |
+| `OPENROUTER_BASE_URL` | optional | optional | no |
+| `OPENROUTER_PROVIDER` | optional (anthropic) | optional (anthropic) | no |
+| `OPENROUTER_ALLOW_FALLBACKS` | optional (false) | optional (false) | no |
+| `OPENROUTER_DATA_COLLECTION` | optional (deny) | optional (deny) | no |
+| `ANTHROPIC_API_KEY` | only if direct | only if direct | **yes** |
 | `ANTHROPIC_MODEL` | optional | optional | no |
-| `ANTHROPIC_EFFORT` | optional | optional | no |
 | `DEEPGRAM_API_KEY` | yes | yes | **yes** |
 | `LIVEKIT_URL` | yes | yes | no |
 | `LIVEKIT_API_KEY` | yes | yes | **yes** |

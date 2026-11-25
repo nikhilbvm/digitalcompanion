@@ -19,8 +19,8 @@ LiveKit voice worker for Digital Companion.
 - `llmNode` filters every sentence and persists the **safe filtered text**, not the raw LLM output, so
   the chat context and live transcript are safe as well as the audio. `ttsNode` is a second layer for
   non-LLM text.
-- `CompanionAnthropicLLM` is the only place for Anthropic request policy: effort low, cached persona,
-  no sampling params, refusal fallback.
+- `CompanionOpenRouterLLM` is the default voice LLM adapter (effort low, cached system block,
+  provider pin, refusal fallback); `CompanionAnthropicLLM` is the direct fallback.
 - Recorder failures must never cut the audio pipeline; log and continue.
 - `DATABASE_URL` and its credentials are server-only.
 - Do not log transcripts, care notes or identifiers.
@@ -40,7 +40,7 @@ pnpm verify
 |---|---|
 | Session models/VAD/turn detection | `src/main.ts` |
 | Guardrail hooks / persistence timing | `src/companion-agent.ts` |
-| Anthropic request policy | `src/llm/anthropic.ts` |
+| LLM request policy | `src/llm/openrouter.ts`, `src/llm/anthropic.ts` |
 | Sentence filter / latency tap | `src/guardrail-nodes.ts` |
 | DB writes | `src/recorder.ts` + core mappers |
 | Env vars | `src/config.ts`, `.env.example`, `docs/local-dev.md` |

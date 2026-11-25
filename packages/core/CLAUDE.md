@@ -13,7 +13,8 @@ Shared persona, guardrails, types, Postgres pool, memory helpers. **No app or Li
 - `COMPANION_PERSONA` is the prompt-cache prefix: keep it byte-stable. Person facts go in
   `buildProfileBlock`.
 - Severity priority: `self_harm > emergency > scam > abuse > medical_question > distress > none`.
-  Patterns set the floor; the classifier can only raise it.
+  Patterns set the floor; the classifier can only raise it. The classifier defaults to OpenRouter and
+  falls back to direct Anthropic with `LLM_PROVIDER=anthropic`.
 - Mask card/SSN/OTP/Medicare before persistence, classifier calls and logs.
 - `createDbPool` uses `DATABASE_URL` and is server-only. Never export it to the browser.
 - Types are camelCase; row mappers convert snake_case at the boundary.

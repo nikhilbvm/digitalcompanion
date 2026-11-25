@@ -58,7 +58,7 @@ the outcome, and stops after opt-out.
    Gateway, agent service (no inbound), Secrets Manager, IAM task roles, CloudWatch, GitHub OIDC role.
 2. **State** — S3 + DynamoDB lock per environment (`dev`, `prod`).
 3. **Images** — build in CI, push to ECR, deploy by immutable tag. GHCR remains for local/Part 1.
-4. **Secrets** — Anthropic, Deepgram, LiveKit, `DATABASE_URL` in Secrets Manager; task
+4. **Secrets** — OpenRouter/Anthropic, Deepgram, LiveKit, `DATABASE_URL` in Secrets Manager; task
    definitions inject at runtime; no secrets in env files or git.
 5. **Pipeline** — manual deploy with version + environment; prod approval gate; migration step before
    service update; `/health` smoke test; deploy tag `deploy/{env}/{component}/v{version}`.
@@ -82,7 +82,8 @@ Prerequisite for family use, parallel with 2A:
 - Consent and recording/transcript disclosure; emergency escalation policy with a human contact.
 - Rate limits, WAF, request size limits, admin CSRF protection.
 - Retention/export/delete controls; backup/restore drill.
-- Privacy review of Anthropic/Deepgram/LiveKit/AWS processing and prompt caching.
+- Privacy review of OpenRouter/Anthropic/Deepgram/LiveKit/AWS processing, provider routing and
+  prompt caching.
 - Accessibility review with older adults; large-type and contrast checks.
 
 ---

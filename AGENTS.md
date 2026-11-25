@@ -35,7 +35,7 @@ If a change touches persona or guardrails, read
 ```
 apps/web       Next.js UI + /admin. Client-only features; no server secrets.
 apps/api       Express API. App factory in src/app.ts, listen in src/index.ts.
-apps/agent     LiveKit worker. Custom Anthropic adapter in src/llm/anthropic.ts.
+apps/agent     LiveKit worker. OpenRouter (default) + direct Anthropic LLM adapters in src/llm/.
 packages/core  Persona, guardrails, types, Postgres pool, memory helpers.
 db/            SQL migrations and seed. Append-only once applied.
 devops/        CI/CD strategy, env contracts, Part 2 Terraform placeholder.
@@ -74,8 +74,9 @@ Never commit `.env`, `.env.*` (except `.env.example`), `.secrets*`, `dist/`, `.n
    (safe) version of voice replies, not the raw LLM output.
 3. **Service role key is server-only.** It may appear in `apps/api` and `apps/agent`; never in
    `apps/web`, `NEXT_PUBLIC_*`, or client bundles. RLS is enabled with no anon policies.
-4. **No sampling parameters.** Claude requests use `claude-haiku-5-5`, no `temperature`/`top_p`/`top_k`,
-   no assistant prefill, `output_config.effort` low for chat, and a cached persona block.
+4. **No sampling parameters.** LLM requests (OpenRouter `anthropic/claude-haiku-5.5` by default, or
+   direct `claude-haiku-5-5` when `LLM_PROVIDER=anthropic`) use no `temperature`/`top_p`/`top_k`, no
+   assistant prefill, effort low, and a cached persona/system block.
 5. **Check `stop_reason`** (including `refusal`) before using a reply. Use the gentle fallback.
 6. **Keep the persona cache-stable.** The `COMPANION_PERSONA` string is the cache prefix; person facts
    go in the separate profile block.

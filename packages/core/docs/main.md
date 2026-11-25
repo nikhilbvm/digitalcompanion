@@ -23,8 +23,10 @@ classifier = classifyInput(maskedText)   // Haiku, structured output, can degrad
 category = highestGuardrailCategory([...patternCategories, classifier.category])
 ```
 
-The classifier uses `messages.parse` with a Zod schema `{ category, confidence }`, `effort: "low"` and
-a 2.5s timeout. Failures return `none/degraded`; they never throw into the reply path.
+The classifier uses OpenRouter by default (`anthropic/claude-haiku-5.5`, `response_format` JSON schema,
+reasoning effort low, provider pinned to Anthropic) and direct Anthropic `messages.parse` when
+`LLM_PROVIDER=anthropic`. It has a 2.5s timeout. Failures return `none/degraded`; they never throw into
+the reply path.
 
 ## Masking
 

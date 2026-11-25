@@ -1,6 +1,6 @@
 # @companion/api
 
-Express 5 API for Digital Companion: streaming text chat, LiveKit access tokens, people and
+Express 5 API for Digital Companion: streaming text chat (OpenRouter by default, direct Anthropic optional), LiveKit access tokens, people and
 conversation data for the admin page.
 
 ## Commands
@@ -30,10 +30,10 @@ Full contract: [docs/main.md](docs/main.md) · SSE detail:
 
 ## Configuration
 
-Reads the root `.env` (and `apps/api/.env` if present). Required: `DATABASE_URL`,
-`ANTHROPIC_API_KEY`. Voice tokens additionally need `LIVEKIT_URL`,
+Reads the root `.env` (and `apps/api/.env` if present). Required: `DATABASE_URL` and either
+`OPENROUTER_API_KEY` (default) or `ANTHROPIC_API_KEY` (when `LLM_PROVIDER=anthropic`). Voice tokens additionally need `LIVEKIT_URL`,
 `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `AGENT_NAME`. Optional: `API_PORT` (or cloud `PORT`), `CORS_ORIGIN`,
-`ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`.
+`OPENROUTER_MODEL`, `OPENROUTER_PROVIDER`, `LLM_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`.
 
 ## Structure
 
@@ -43,7 +43,9 @@ src/index.ts          listen + graceful shutdown
 src/routes/           health, people, conversations, chat, livekit
 src/services/
   store.ts            Postgres reads/writes (pg pool)
-  anthropic.ts        streaming request policy
+  llm.ts              provider dispatcher (OpenRouter / Anthropic)
+  openrouter.ts       OpenRouter streaming request policy
+  anthropic.ts        direct Anthropic streaming policy (fallback)
   chat-turn.ts        guardrail → Claude → output filter → persist
 src/sse.ts            SSE writer
 src/config.ts         env loading + configured-service flags
