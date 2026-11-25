@@ -161,7 +161,17 @@ management-account biznomy admin**:
 4. Assign the user to the management account (and later to tenant accounts).
 5. Copy the **AWS access portal URL** and note the SSO region.
 
-Then, locally:
+Then open **CloudShell** in the management account/region and run the bootstrap script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nikhilbvm/digitalcompanion/main/devops/tenancy/cloudshell/bootstrap-sso.sh -o bootstrap-sso.sh
+REGION=us-east-1 ADMIN_EMAIL='you@example.com' ADMIN_USERNAME='nikhil-admin' bash bootstrap-sso.sh
+```
+
+It creates/reuses the `TenantAdmin` permission set (AdministratorAccess for bootstrap), the Identity
+Center user and the management-account assignment, then prints the SSO start URL/region.
+
+Then locally:
 
 ```bash
 aws configure sso --profile dc-admin
@@ -170,6 +180,8 @@ aws configure sso --profile dc-admin
 aws sso login --profile dc-admin
 aws sts get-caller-identity --profile dc-admin
 ```
+
+See [devops/tenancy/README.md](../../devops/tenancy/README.md) for the folder layout.
 
 Do not create root access keys. If the biznomy user cannot enable Identity Center, use an existing
 management-account admin role or the console root login once (with MFA) for this bootstrap only.
