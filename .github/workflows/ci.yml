@@ -68,10 +68,17 @@ jobs:
 
       - name: Smoke-test API image
         run: |
+          set +e
           docker run -d --name dc-api -p 4000:4000 -e API_PORT=4000 digitalcompanion-api:ci
-          curl -fsS --retry 20 --retry-delay 1 --retry-connrefused http://localhost:4000/health
+          sleep 2
+          curl -fsS --retry 10 --retry-delay 1 --retry-connrefused http://localhost:4000/health
+          status=$?
+          echo "--- container status ---"
+          docker inspect dc-api --format '{{.State.Status}} exit={{.State.ExitCode}}'
+          echo "--- container logs ---"
           docker logs dc-api
-          docker rm -f dc-api
+          docker rm -f dc-api >/dev/null 2>&1
+          exit $status
 
       - name: Build agent image
         uses: docker/build-push-action@v7
