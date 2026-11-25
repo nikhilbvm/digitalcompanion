@@ -55,7 +55,8 @@ See [docs/architecture/guardrails.md](docs/architecture/guardrails.md).
 
 ## Quickstart
 
-Prerequisites: **Node 22 LTS**, **pnpm 10** (via corepack), Docker optional.
+Prerequisites: **Node 22 LTS**, **pnpm 10** (via corepack), and **Docker** for the local Postgres
+service (or an RDS `DATABASE_URL`).
 
 ```bash
 # 1. Install
