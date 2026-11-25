@@ -4,13 +4,13 @@ Read [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md) first; this is a co
 
 Digital Companion is a voice + text AI companion for older adults: `apps/web` (Next.js),
 `apps/api` (Express), `apps/agent` (LiveKit worker), `packages/core` (persona/guardrails/types),
-`supabase` (SQL), `devops`, `docs`.
+`db` (SQL), `devops`, `docs`.
 
 ## Safety invariants
 
 - Never weaken persona rules, input guardrails, output filtering or masking to make a scenario pass.
 - Mask card/SSN/OTP/Medicare numbers before persistence or classifier calls; never echo them.
-- The Supabase service role key is server-only; never use it in the web app or `NEXT_PUBLIC_*`.
+- `DATABASE_URL` and its credentials are server-only; never use them in the web app or `NEXT_PUBLIC_*`.
 - Claude requests: `claude-haiku-5-5`, no `temperature`/`top_p`/`top_k`, no prefill, effort low,
   cached persona, check `stop_reason` including `refusal`.
 - The web UI stays client-only (Capacitor-ready).

@@ -1,7 +1,7 @@
 # @companion/web
 
 Next.js App Router + Tailwind. One large-type screen for the older adult and a minimal `/admin` page.
-Client-side only for product features; no API keys and no Supabase access.
+Client-side only for product features; no API keys and no database access.
 
 ## Commands
 

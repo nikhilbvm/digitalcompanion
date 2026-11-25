@@ -24,13 +24,13 @@ the database or to Anthropic; it talks to the API and to LiveKit Cloud.
                └────────────────┬────────────────────┘
                                 ▼
                  ┌────────────────────────────────┐
-                 │ Supabase Postgres              │
+                 │ Postgres (local / RDS)         │
                  │ people · conversations         │
                  │ messages · guardrail_flags     │
                  │ memory_notes                   │
                  └────────────────────────────────┘
 
-Shared: packages/core — persona, guardrails, types, Supabase client, memory helpers.
+Shared: packages/core — persona, guardrails, types, Postgres pool, memory helpers.
 External: Anthropic (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (media + dispatch).
 ```
 
@@ -38,11 +38,11 @@ External: Anthropic (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (medi
 
 | Component | Owns | Must not |
 |---|---|---|
-| `apps/web` | Screens, accessibility, LiveKit client, SSE consumption, admin UI | Hold server secrets, use server-only Next features, write to Supabase |
+| `apps/web` | Screens, accessibility, LiveKit client, SSE consumption, admin UI | Hold server secrets, use server-only Next features, write to the database |
 | `apps/api` | HTTP contract, SSE, token creation, persistence, Anthropic text calls | Contain voice-pipeline logic, import LiveKit agent code |
 | `apps/agent` | Voice room lifecycle, STT/LLM/TTS hooks, voice turn persistence | Serve HTTP, import API routes |
-| `packages/core` | Persona, guardrails, shared types, Supabase factory, memory helpers | Import an app, import LiveKit, use browser APIs |
-| `supabase` | Schema, indexes, RLS | Contain application logic |
+| `packages/core` | Persona, guardrails, shared types, Postgres pool, memory helpers | Import an app, import LiveKit, use browser APIs |
+| `db` | Schema, indexes, RLS | Contain application logic |
 | `devops` / `.github` | CI, artifacts, environments, Part 2 deployment | Hold secrets in git |
 
 Dependency direction is one-way: `apps/* → packages/core`. The web app imports only type-only
@@ -82,9 +82,9 @@ Detail: [voice-pipeline.md](voice-pipeline.md) and
 
 | Failure | Behavior |
 |---|---|
-| Supabase not configured | `/health` works; data routes return 503 `not_configured`; SSE `/chat` returns 503 JSON before streaming |
+| Database not configured | `/health` works; data routes return 503 `not_configured`; SSE `/chat` returns 503 JSON before streaming |
 | Anthropic key missing | `/chat` 503; agent exits at startup with the missing variable names |
-| Deepgram/LiveKit missing | agent exits at startup; text chat still works if Anthropic/Supabase are set |
+| Deepgram/LiveKit missing | agent exits at startup; text chat still works if Anthropic and the database are set |
 | Classifier timeout/error | degrades to `none`; deterministic patterns still apply; reply is not blocked |
 | Anthropic refusal | gentle fallback line is emitted and persisted |
 | Client disconnects mid-chat | request aborts; partial safe reply is persisted; no error event |

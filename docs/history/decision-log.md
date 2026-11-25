@@ -4,12 +4,30 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-25 — AWS-only database: RDS PostgreSQL
+
+**Decision:** Replace Supabase with Amazon RDS for PostgreSQL (Aurora Serverless v2 is the scale-up
+option). The API and agent connect with a server-side `pg` pool using `DATABASE_URL`; local
+development uses the Docker Postgres service.
+
+**Context:** Supabase was used only as managed Postgres (no Auth, Storage, Realtime or Edge
+Functions). Nikhil chose an AWS-only database stack. Keeping the existing SQL schema avoids a data
+model rewrite; the application query layer moved from `supabase-js` to parameterized `pg` queries.
+
+**Consequences:** `supabase/` became `db/`; `createSupabaseClient` became `createDbPool`; Store,
+Recorder and memory helpers use SQL. RDS lives in private subnets with encryption, backups and TLS
+(`DATABASE_SSL=true`). CI applies the migration to a throwaway Postgres and exercises the store. The
+old "service-role-only Supabase" decision below is historical.
+
+---
+
 ## 2026-11-25 — AWS-only hosting
 
 **Decision:** Host all app compute on AWS. The web app builds to a static Next export and deploys to
 S3 + CloudFront; the API and voice agent deploy to ECR + ECS Fargate (Lambda/API Gateway remains an
 option for the API). AWS Amplify Hosting is a fallback if managed preview builds are wanted.
-Supabase, LiveKit Cloud, Anthropic and Deepgram remain managed external services.
+Amazon RDS for PostgreSQL is the database. LiveKit Cloud, Anthropic and Deepgram remain managed
+external services.
 
 **Context:** Nikhil chose AWS-only hosting to keep infrastructure and billing in one cloud. The web
 UI is client-only, so a static export is a good fit and avoids a web server. The agent is a long-lived
@@ -18,8 +36,8 @@ worker with native modules; Fargate fits better than Lambda.
 **Consequences:** `NEXT_PUBLIC_*` values are set at web build time; `apps/web/out/` is synced to S3
 and CloudFront is invalidated. `next start` is replaced by `serve out` for local preview. AWS deploy
 work is still Part 2 (Terraform, environments, OIDC, deploy workflow); nothing deploys automatically
-today. If "AWS only" is later meant to include the data/voice providers, replacing Supabase and
-LiveKit is a separate major decision.
+today. If "AWS only" is later meant to include the voice/AI providers, replacing LiveKit and the
+model/speech APIs is a separate major decision.
 
 ---
 
@@ -80,7 +98,7 @@ persona/guardrails but not transport code.
 
 ---
 
-## 2026-11-25 — Service-role-only Supabase with RLS enabled
+## 2026-11-25 — Service-role-only Supabase with RLS enabled (superseded by RDS)
 
 **Decision:** The browser never talks to Supabase. All reads/writes go through the API or agent using
 the service role key; RLS is enabled on every table with no anon policies.

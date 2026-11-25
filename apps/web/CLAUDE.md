@@ -11,7 +11,7 @@ Next.js UI for the older adult and the local admin page.
 
 - One screen, huge type (body ≥ 24px), high contrast, no menus, 64px+ targets.
 - Client-friendly: no server-only Next features, because this will be wrapped with Capacitor.
-- Never use the Supabase service role key or import core's `supabase.ts`/classifier at runtime. Import
+- Never use `DATABASE_URL`/DB credentials or import core's `db.ts`/classifier at runtime. Import
   types only from `@companion/core/types`.
 - `delta` SSE text is already output-filtered; render it as-is, never raw model output.
 - Voice transcript comes from `lk.transcription` text streams; register the handler before connecting.

@@ -30,8 +30,9 @@ export const config = {
   livekitUrl: process.env.LIVEKIT_URL ?? '',
   livekitApiKey: process.env.LIVEKIT_API_KEY ?? '',
   livekitApiSecret: process.env.LIVEKIT_API_SECRET ?? '',
-  supabaseUrl: process.env.SUPABASE_URL ?? '',
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  databaseUrl: process.env.DATABASE_URL ?? '',
+  databaseSsl: process.env.DATABASE_SSL === 'true',
+  databaseSslCa: process.env.DATABASE_SSL_CA ?? '',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
 } as const;
 
@@ -40,6 +41,6 @@ export function configuredServices(): Record<string, boolean> {
     anthropic: Boolean(config.anthropicApiKey),
     deepgram: Boolean(process.env.DEEPGRAM_API_KEY),
     livekit: Boolean(config.livekitUrl && config.livekitApiKey && config.livekitApiSecret),
-    supabase: Boolean(config.supabaseUrl && config.supabaseServiceRoleKey),
+    database: Boolean(config.databaseUrl),
   };
 }

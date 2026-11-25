@@ -14,7 +14,7 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 
 echo "Starting web (:3000), api (:4000) and the LiveKit agent worker."
-echo "The agent exits early if LiveKit/Deepgram/Supabase keys are missing; web + api keep running."
+echo "The agent exits early if LiveKit/Deepgram/DATABASE_URL keys are missing; web + api keep running."
 echo
 
 exec pnpm exec concurrently \

@@ -61,5 +61,5 @@ the endpoint is idempotent.
 ## Privacy
 
 Audio flows browser ↔ LiveKit Cloud ↔ agent. No audio is recorded by our code in Part 1. Transcripts
-are stored masked in Supabase by the agent recorder. Do not add client-side analytics that capture
+are stored masked in Postgres by the agent recorder. Do not add client-side analytics that capture
 transcript text.

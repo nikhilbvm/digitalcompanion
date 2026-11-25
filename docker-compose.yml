@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: digitalcompanion-db
+    environment:
+      POSTGRES_USER: companion
+      POSTGRES_PASSWORD: companion_dev
+      POSTGRES_DB: digitalcompanion
+    ports:
+      - '5432:5432'
+    volumes:
+      - companion_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U companion -d digitalcompanion']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  companion_pgdata:

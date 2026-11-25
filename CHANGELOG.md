@@ -10,11 +10,21 @@
   Anthropic Haiku 5.5 adapter (effort low, cached persona, refusal fallback).
 - Persona and guardrails in `packages/core`: Luhn card, SSN, OTP, Medicare masking; scam/emergency/
   self-harm patterns; Haiku classifier; output filter; 63 tests.
-- Supabase schema: people, conversations, messages, guardrail flags, memory notes; RLS enabled.
+- Postgres schema (local Docker or Amazon RDS): people, conversations, messages, guardrail flags,
+  memory notes; RLS enabled as defense in depth.
 - Large-type companion screen and minimal local admin.
 - Documentation system, per-subproject docs and CLAUDE files, AGENTS manual, decision log.
 - CI workflow and manual GHCR container publishing; API and agent Dockerfiles.
 - Part 2 roadmap (memory, scheduled ring, AWS/Terraform).
+
+### Changed
+
+- Database moved from Supabase to Amazon RDS for PostgreSQL (`pg` pool, `db/` migrations, Docker
+  Postgres locally); CI applies the schema and runs a store smoke test.
+- Web builds as a static Next export for AWS S3 + CloudFront (AWS-only hosting decision); local
+  preview uses `serve out`.
+- CI now builds both container images, smoke-tests API `/health`, and confirms the agent image reaches
+  its config check.
 
 ### Security
 

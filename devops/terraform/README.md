@@ -8,10 +8,11 @@ without re-deciding the deployment shape.
 ```
 terraform/
 ├── modules/
-│   ├── network/        # VPC, private subnets, security groups
+│   ├── network/        # VPC, private subnets, NAT egress, security groups
 │   ├── ecr/            # repositories + lifecycle policy
 │   ├── ecs-api/        # cluster, task definition, service, ALB/API Gateway
 │   ├── ecs-agent/      # LiveKit worker task + service (no inbound)
+│   ├── rds/            # PostgreSQL, subnet group, security group, backups
 │   ├── web/            # S3 bucket, CloudFront, index rewrite, invalidation
 │   ├── secrets/        # Secrets Manager entries
 │   ├── observability/  # CloudWatch log groups, alarms, dashboard
@@ -20,6 +21,19 @@ terraform/
     ├── dev/
     └── prod/
 ```
+
+## Runtime notes
+
+- The API and agent run in private subnets and need outbound access (NAT gateway) to Anthropic,
+  Deepgram, LiveKit Cloud and RDS. Only the API sits behind the ALB; the agent has no inbound
+  listener.
+- API target group health check: `GET /health` (expect 200 and `configured` true for required
+  services). The agent has no HTTP health endpoint; alarm on ECS task restarts, LiveKit worker
+  disconnects and error logs.
+- The web bucket is private; CloudFront accesses it via OAC (or use the S3 website endpoint when a
+  directory-index rewrite is simpler). Add a CloudFront Function if using an OAC + REST origin.
+- Store `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `LIVEKIT_*` and `DATABASE_URL` in Secrets Manager
+  and inject them through the task execution role. RDS is reachable only from the app security group.
 
 ## State
 
@@ -37,7 +51,7 @@ terraform/
 
 ```
 1. Build immutable images (api, agent) and push to ECR.
-2. Run the database migration (Supabase CLI/psql) with a dedicated credential.
+2. Run the database migration (psql against RDS) with a dedicated credential.
 3. Update the ECS API service and wait for stability.
 4. Update the ECS agent service.
 5. Build the web static export and `aws s3 sync` it to the bucket; invalidate CloudFront.
@@ -51,6 +65,6 @@ Rollback: deploy the previous image tag; migrations stay backward-compatible for
 
 - Decide API runtime: ECS Fargate (default) vs Lambda + API Gateway.
 - Web hosting: S3 + CloudFront static export (decided); add an S3/CloudFront module.
-- Confirm Supabase/LiveKit production projects and secret rotation policy.
+- Confirm RDS/LiveKit production resources and secret rotation policy.
 - Read [docs/devops.md](../../docs/devops.md) and
   [docs/planning/02-part2-roadmap.md](../../docs/planning/02-part2-roadmap.md).

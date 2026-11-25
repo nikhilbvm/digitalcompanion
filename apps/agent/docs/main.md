@@ -11,7 +11,7 @@ cli.runApp(ServerOptions{ agent: dist/main.js, agentName: AGENT_NAME })
   → waits for dispatched jobs
   → job: entry(ctx)
       metadata = JSON.parse(ctx.job.metadata)
-      person = supabase.people.select('*').eq('id', metadata.personId)
+      person = db.query('select * from people where id = $1', [metadata.personId])
       agent = CompanionAgent{ instructions: buildSystemText(person), llm }
       session = AgentSession{ stt, llm, tts, vad, turnHandling }
       session.on(Close) → recorder.endConversation()
@@ -66,8 +66,9 @@ ttsNode(text, settings):
 
 ## Persistence
 
-`Recorder` writes user and assistant messages + flags; masks text defensively; catches and logs
-errors. `ended_at` is set when the session closes.
+`Recorder` writes user and assistant messages + flags over a `pg` pool; masks text defensively;
+catches and logs errors. `ended_at` is set when the session closes. The pool is closed when the job
+ends.
 
 ## Latency
 

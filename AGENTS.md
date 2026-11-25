@@ -36,14 +36,14 @@ If a change touches persona or guardrails, read
 apps/web       Next.js UI + /admin. Client-only features; no server secrets.
 apps/api       Express API. App factory in src/app.ts, listen in src/index.ts.
 apps/agent     LiveKit worker. Custom Anthropic adapter in src/llm/anthropic.ts.
-packages/core  Persona, guardrails, types, Supabase client, memory helpers.
-supabase/      SQL migrations. Append-only once applied.
+packages/core  Persona, guardrails, types, Postgres pool, memory helpers.
+db/            SQL migrations and seed. Append-only once applied.
 devops/        CI/CD strategy, env contracts, Part 2 Terraform placeholder.
 docs/          Architecture, planning, local dev, agent workflows, history.
 ```
 
 Dependency direction: `apps/* → packages/core`. Core must never import an app or LiveKit. The web app
-must not import server-only core modules (`supabase.ts` and the classifier) at runtime.
+must not import server-only core modules (`db.ts` and the classifier) at runtime.
 
 ---
 
@@ -112,7 +112,7 @@ Never commit `.env`, `.env.*` (except `.env.example`), `.secrets*`, `dist/`, `.n
 | Text chat behavior, SSE contract, endpoint | `apps/api` + API docs + README |
 | Voice turn behavior, LiveKit hooks, TTS filtering | `apps/agent` + voice docs |
 | Screen, accessibility, admin | `apps/web` + web docs |
-| Table/index/RLS | new `supabase/migrations/000N_*.sql` (never edit an applied migration) |
+| Table/index/RLS | new `db/migrations/000N_*.sql` (never edit an applied migration) |
 | Pipeline, image publishing, environments | `.github/workflows/`, `devops/`, `docs/devops.md` |
 | New env var | `.env.example`, the consuming app config, `docs/local-dev.md`, deployment docs |
 
@@ -126,7 +126,7 @@ Never commit `.env`, `.env.*` (except `.env.example`), `.secrets*`, `dist/`, `.n
 - No secrets, build output or generated files staged.
 - Safety invariants unchanged unless the change is explicitly about them — and then reviewed against
   the acceptance matrix in the master plan.
-- Manual-only checks (voice, LiveKit, Deepgram, Supabase) are named in the final report.
+- Manual-only checks (voice, LiveKit, Deepgram, live RDS) are named in the final report.
 
 ---
 

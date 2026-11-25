@@ -44,11 +44,12 @@ claims to be human/a relative, or contains a sensitive identifier → replace wi
 Postgres columns; `map*` functions convert. Zod schemas validate API input (`newPersonSchema`,
 `chatRequestSchema`, `livekitTokenRequestSchema`, `memoryNoteInputSchema`).
 
-## Supabase / memory
+## Postgres / memory
 
-`createSupabaseClient` requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` and disables session
-persistence. Memory helpers are Part 2-ready: only active, non-expired, low-sensitivity notes should be
-injected, via `buildMemoryBlock`.
+`createDbPool` requires `DATABASE_URL` (local Postgres or RDS/Aurora). It uses SSL when
+`DATABASE_SSL=true` and optional certificate verification via `DATABASE_SSL_CA`. Memory helpers are
+Part 2-ready: only active, non-expired, low-sensitivity notes should be injected, via
+`buildMemoryBlock`.
 
 ## Tests
 

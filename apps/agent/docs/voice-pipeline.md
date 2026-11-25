@@ -11,7 +11,7 @@ with the exact files and hooks in this app.
 | `src/companion-agent.ts` | `onUserTurnCompleted` (input guardrail), `llmNode` (output filter + persistence), `ttsNode` (second filter layer + latency) |
 | `src/llm/anthropic.ts` | `CompanionAnthropicLLM` + stream, request policy |
 | `src/guardrail-nodes.ts` | `filterLlmStream`, `filterTextForTts`, `tapFirstAudio` |
-| `src/recorder.ts` | user/assistant messages, flags, `ended_at` |
+| `src/recorder.ts` | Postgres user/assistant messages, flags, `ended_at` |
 | `src/config.ts` | env, `assertAgentConfig` |
 
 ## Turn timeline

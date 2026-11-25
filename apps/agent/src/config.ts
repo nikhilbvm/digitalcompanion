@@ -26,8 +26,9 @@ export const config = {
   livekitUrl: process.env.LIVEKIT_URL ?? '',
   livekitApiKey: process.env.LIVEKIT_API_KEY ?? '',
   livekitApiSecret: process.env.LIVEKIT_API_SECRET ?? '',
-  supabaseUrl: process.env.SUPABASE_URL ?? '',
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  databaseUrl: process.env.DATABASE_URL ?? '',
+  databaseSsl: process.env.DATABASE_SSL === 'true',
+  databaseSslCa: process.env.DATABASE_SSL_CA ?? '',
 } as const;
 
 export function assertAgentConfig(): void {
@@ -37,8 +38,7 @@ export function assertAgentConfig(): void {
     ['LIVEKIT_URL', config.livekitUrl],
     ['LIVEKIT_API_KEY', config.livekitApiKey],
     ['LIVEKIT_API_SECRET', config.livekitApiSecret],
-    ['SUPABASE_URL', config.supabaseUrl],
-    ['SUPABASE_SERVICE_ROLE_KEY', config.supabaseServiceRoleKey],
+    ['DATABASE_URL', config.databaseUrl],
   ]
     .filter(([, value]) => !value)
     .map(([name]) => name);

@@ -30,8 +30,8 @@ Full contract: [docs/main.md](docs/main.md) · SSE detail:
 
 ## Configuration
 
-Reads the root `.env` (and `apps/api/.env` if present). Required: `SUPABASE_URL`,
-`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`. Voice tokens additionally need `LIVEKIT_URL`,
+Reads the root `.env` (and `apps/api/.env` if present). Required: `DATABASE_URL`,
+`ANTHROPIC_API_KEY`. Voice tokens additionally need `LIVEKIT_URL`,
 `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `AGENT_NAME`. Optional: `API_PORT` (or cloud `PORT`), `CORS_ORIGIN`,
 `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`.
 
@@ -42,7 +42,7 @@ src/app.ts            createApp() — no listen, Lambda-ready
 src/index.ts          listen + graceful shutdown
 src/routes/           health, people, conversations, chat, livekit
 src/services/
-  store.ts            Supabase reads/writes (service role)
+  store.ts            Postgres reads/writes (pg pool)
   anthropic.ts        streaming request policy
   chat-turn.ts        guardrail → Claude → output filter → persist
 src/sse.ts            SSE writer

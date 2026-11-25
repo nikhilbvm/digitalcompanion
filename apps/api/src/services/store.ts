@@ -1,6 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
-  createSupabaseClient,
+  createDbPool,
   mapConversation,
   mapGuardrailFlag,
   mapMessage,
@@ -9,6 +8,7 @@ import {
   type Conversation,
   type ConversationMode,
   type ConversationRow,
+  type DbPool,
   type GuardrailFlag,
   type GuardrailFlagRow,
   type GuardrailHit,
@@ -26,45 +26,48 @@ function fail(operation: string, message: string): never {
 }
 
 export class Store {
-  constructor(private readonly client: SupabaseClient) {}
+  constructor(private readonly db: DbPool) {}
+
+  async close(): Promise<void> {
+    await this.db.end();
+  }
 
   // -------------------------------------------------------------------------
   // People
   // -------------------------------------------------------------------------
 
   async listPeople(): Promise<Person[]> {
-    const { data, error } = await this.client
-      .from('people')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) fail('listPeople', error.message);
-    return (data as PersonRow[]).map(mapPerson);
+    const { rows } = await this.db.query<PersonRow>(
+      'select * from people order by created_at desc',
+    );
+    return rows.map(mapPerson);
   }
 
   async getPerson(personId: string): Promise<Person | null> {
-    const { data, error } = await this.client
-      .from('people')
-      .select('*')
-      .eq('id', personId)
-      .maybeSingle();
-    if (error) fail('getPerson', error.message);
-    return data ? mapPerson(data as PersonRow) : null;
+    const { rows } = await this.db.query<PersonRow>(
+      'select * from people where id = $1',
+      [personId],
+    );
+    const row = rows[0];
+    return row ? mapPerson(row) : null;
   }
 
   async createPerson(input: NewPerson): Promise<Person> {
-    const { data, error } = await this.client
-      .from('people')
-      .insert({
-        name: input.name,
-        preferred_name: input.preferredName,
-        interests: input.interests,
-        avoid_topics: input.avoidTopics,
-        care_notes: input.careNotes ?? null,
-      })
-      .select('*')
-      .single();
-    if (error) fail('createPerson', error.message);
-    return mapPerson(data as PersonRow);
+    const { rows } = await this.db.query<PersonRow>(
+      `insert into people (name, preferred_name, interests, avoid_topics, care_notes)
+       values ($1, $2, $3, $4, $5)
+       returning *`,
+      [
+        input.name,
+        input.preferredName,
+        input.interests,
+        input.avoidTopics,
+        input.careNotes ?? null,
+      ],
+    );
+    const row = rows[0];
+    if (!row) fail('createPerson', 'insert returned no row');
+    return mapPerson(row);
   }
 
   // -------------------------------------------------------------------------
@@ -72,50 +75,49 @@ export class Store {
   // -------------------------------------------------------------------------
 
   async createConversation(personId: string, mode: ConversationMode): Promise<Conversation> {
-    const { data, error } = await this.client
-      .from('conversations')
-      .insert({ person_id: personId, mode })
-      .select('*')
-      .single();
-    if (error) fail('createConversation', error.message);
-    return mapConversation(data as ConversationRow);
+    const { rows } = await this.db.query<ConversationRow>(
+      `insert into conversations (person_id, mode)
+       values ($1, $2)
+       returning *`,
+      [personId, mode],
+    );
+    const row = rows[0];
+    if (!row) fail('createConversation', 'insert returned no row');
+    return mapConversation(row);
   }
 
   async getConversation(conversationId: string): Promise<Conversation | null> {
-    const { data, error } = await this.client
-      .from('conversations')
-      .select('*')
-      .eq('id', conversationId)
-      .maybeSingle();
-    if (error) fail('getConversation', error.message);
-    return data ? mapConversation(data as ConversationRow) : null;
+    const { rows } = await this.db.query<ConversationRow>(
+      'select * from conversations where id = $1',
+      [conversationId],
+    );
+    const row = rows[0];
+    return row ? mapConversation(row) : null;
   }
 
   async listConversations(personId?: string): Promise<Conversation[]> {
-    let query = this.client
-      .from('conversations')
-      .select('*')
-      .order('started_at', { ascending: false });
-    if (personId) query = query.eq('person_id', personId);
-
-    const { data, error } = await query;
-    if (error) fail('listConversations', error.message);
-    return (data as ConversationRow[]).map(mapConversation);
+    const { rows } = personId
+      ? await this.db.query<ConversationRow>(
+          'select * from conversations where person_id = $1 order by started_at desc',
+          [personId],
+        )
+      : await this.db.query<ConversationRow>(
+          'select * from conversations order by started_at desc',
+        );
+    return rows.map(mapConversation);
   }
 
   async endConversation(conversationId: string): Promise<Conversation> {
-    const existing = await this.getConversation(conversationId);
-    if (!existing) throw new NotFoundError('Conversation not found');
-    if (existing.endedAt) return existing;
-
-    const { data, error } = await this.client
-      .from('conversations')
-      .update({ ended_at: new Date().toISOString() })
-      .eq('id', conversationId)
-      .select('*')
-      .single();
-    if (error) fail('endConversation', error.message);
-    return mapConversation(data as ConversationRow);
+    const { rows } = await this.db.query<ConversationRow>(
+      `update conversations
+          set ended_at = coalesce(ended_at, now())
+        where id = $1
+        returning *`,
+      [conversationId],
+    );
+    const row = rows[0];
+    if (!row) throw new NotFoundError('Conversation not found');
+    return mapConversation(row);
   }
 
   // -------------------------------------------------------------------------
@@ -127,38 +129,37 @@ export class Store {
     role: 'user' | 'assistant';
     text: string;
   }): Promise<Message> {
-    const { data, error } = await this.client
-      .from('messages')
-      .insert({
-        conversation_id: input.conversationId,
-        role: input.role,
-        text: maskSensitive(input.text),
-      })
-      .select('*')
-      .single();
-    if (error) fail('addMessage', error.message);
-    return mapMessage(data as MessageRow);
+    const { rows } = await this.db.query<MessageRow>(
+      `insert into messages (conversation_id, role, text)
+       values ($1, $2, $3)
+       returning *`,
+      [input.conversationId, input.role, maskSensitive(input.text)],
+    );
+    const row = rows[0];
+    if (!row) fail('addMessage', 'insert returned no row');
+    return mapMessage(row);
   }
 
   async getRecentMessages(conversationId: string, limit: number): Promise<Message[]> {
-    const { data, error } = await this.client
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) fail('getRecentMessages', error.message);
-    return (data as MessageRow[]).map(mapMessage).reverse();
+    const { rows } = await this.db.query<MessageRow>(
+      `select * from (
+         select * from messages
+          where conversation_id = $1
+          order by created_at desc
+          limit $2
+       ) recent
+       order by created_at asc`,
+      [conversationId, limit],
+    );
+    return rows.map(mapMessage);
   }
 
   async listMessages(conversationId: string): Promise<Message[]> {
-    const { data, error } = await this.client
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
-    if (error) fail('listMessages', error.message);
-    return (data as MessageRow[]).map(mapMessage);
+    const { rows } = await this.db.query<MessageRow>(
+      'select * from messages where conversation_id = $1 order by created_at asc',
+      [conversationId],
+    );
+    return rows.map(mapMessage);
   }
 
   async addFlags(
@@ -169,41 +170,54 @@ export class Store {
   ): Promise<void> {
     if (hits.length === 0) return;
 
-    const rows = hits.map((hit) => ({
-      conversation_id: conversationId,
-      message_id: messageId,
-      stage,
-      category: hit.category,
-      detail: hit.detail ? maskSensitive(hit.detail) : null,
-    }));
+    const values: unknown[] = [];
+    const placeholders = hits.map((hit, index) => {
+      const base = index * 5;
+      values.push(
+        conversationId,
+        messageId,
+        stage,
+        hit.category,
+        hit.detail ? maskSensitive(hit.detail) : null,
+      );
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+    });
 
-    const { error } = await this.client.from('guardrail_flags').insert(rows);
-    if (error) fail('addFlags', error.message);
+    await this.db.query(
+      `insert into guardrail_flags
+         (conversation_id, message_id, stage, category, detail)
+       values ${placeholders.join(', ')}`,
+      values,
+    );
   }
 
   async listFlags(conversationId: string): Promise<GuardrailFlag[]> {
-    const { data, error } = await this.client
-      .from('guardrail_flags')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
-    if (error) fail('listFlags', error.message);
-    return (data as GuardrailFlagRow[]).map(mapGuardrailFlag);
+    const { rows } = await this.db.query<GuardrailFlagRow>(
+      'select * from guardrail_flags where conversation_id = $1 order by created_at asc',
+      [conversationId],
+    );
+    return rows.map(mapGuardrailFlag);
   }
 }
 
 let cached: Store | null = null;
 
-/** Lazy so the API can start (and serve /health) before Supabase is configured. */
+/** Lazy so the API can start (and serve /health) before Postgres is configured. */
 export function getStore(): Store {
   if (!cached) {
     try {
-      cached = new Store(createSupabaseClient());
+      cached = new Store(createDbPool());
     } catch (error) {
       throw new ConfigError(
-        error instanceof Error ? error.message : 'Supabase is not configured',
+        error instanceof Error ? error.message : 'The database is not configured',
       );
     }
   }
   return cached;
+}
+
+export async function closeStore(): Promise<void> {
+  // The pool is created lazily; export for graceful shutdown and tests.
+  await cached?.close();
+  cached = null;
 }

@@ -11,7 +11,7 @@ Reference project for repo/agent/DevOps conventions: `kjsiteprovisioning2` (unre
 Digital Companion is a voice-and-text AI companion for older adults in the US. A person opens a
 deliberately simple web app and chooses **Talk now** (real-time voice) or **Chat now** (large-type
 text). Every turn passes through a light input guardrail, Claude, and a light output guardrail.
-Conversations, guardrail flags and (from Part 2) memories are stored in Supabase so family/admin
+Conversations, guardrail flags and (from Part 2) memories are stored in Postgres (local or RDS) so family/admin
 users can review them.
 
 The product is safety-critical in a quiet way: it deals with lonely, sometimes vulnerable people,
@@ -31,8 +31,8 @@ it now.
 | Web (`apps/web`) | One large-type screen: person picker, Talk now, Chat now, End; live voice transcript; streaming text chat; browser dictation; read-aloud; minimal `/admin` |
 | API (`apps/api`) | Express app: `POST /chat` (SSE), `POST /livekit/token`, people/conversations CRUD, health; Lambda-ready app/listen split |
 | Voice agent (`apps/agent`) | LiveKit Agents JS worker: Deepgram Nova-3 STT, Claude Haiku 5.5, Deepgram Aura-2 TTS, Silero VAD + LiveKit turn detector, guardrails, turn persistence, latency logs |
-| Core (`packages/core`) | Persona/system prompt, input+output guardrails, shared types, Supabase client, memory helpers |
-| Database (`supabase/`) | One migration with `people`, `conversations`, `messages`, `guardrail_flags`, `memory_notes` |
+| Core (`packages/core`) | Persona/system prompt, input+output guardrails, shared types, Postgres pool, memory helpers |
+| Database (`db/`) | One migration with `people`, `conversations`, `messages`, `guardrail_flags`, `memory_notes` |
 | Docs | Master plan, architecture per subproject, local dev, DevOps, agent operating manual, cross-links |
 | Agent files | Root `CLAUDE.md` + `AGENTS.md`, per-app `CLAUDE.md`, Copilot instructions, `.claude` permission rules |
 | CI/CD | GitHub Actions CI (lint, typecheck, test, build) and manual Docker publish workflow; Part 2 deploy designed but not built |
@@ -71,12 +71,12 @@ it now.
                 └───────────────────┬─────────────────────────────┘
                                     ▼
                      ┌──────────────────────────────────┐
-                     │ Supabase Postgres                │
+                     │ Postgres (local / RDS)           │
                      │ people · conversations · messages│
                      │ guardrail_flags · memory_notes   │
                      └──────────────────────────────────┘
 
-Shared code: packages/core — persona, guardrails, types, Supabase client, memory helpers.
+Shared code: packages/core — persona, guardrails, types, Postgres pool, memory helpers.
 External: Anthropic API (chat + classifier), Deepgram (STT/TTS), LiveKit Cloud (media + dispatch).
 ```
 
@@ -87,7 +87,7 @@ Key decisions:
   Capacitor wrapping possible.
 - **Voice and text share persona + guardrails** from `packages/core`; the voice LLM adapter is the
   only agent-specific copy of Anthropic request policy.
-- **Supabase service role key stays server-side** (API and agent only). The browser never sees it.
+- **Database credentials stay server-side** (API and agent only). The browser never sees `DATABASE_URL`.
 - **Explicit agent dispatch**: the token endpoint attaches a `RoomAgentDispatch` to the room config,
   so joining a room pulls in the named agent worker.
 - **Guardrails are deterministic first**: fast pattern checks never depend on an LLM; the Haiku
@@ -200,7 +200,7 @@ digitalcompanion/
 │       │   ├── index.ts           # public surface
 │       │   ├── persona.ts         # fixed persona + profile block builder
 │       │   ├── types.ts           # Person, Conversation, Message, Flag, MemoryNote
-│       │   ├── supabase.ts        # server-only client factory
+│       │   ├── db.ts              # server-only Postgres pool
 │       │   ├── memory.ts          # memory_notes helpers (Part 2-ready)
 │       │   ├── guardrails/
 │       │   │   ├── index.ts       # runInputGuardrail / filterOutput / maskSensitive
@@ -215,8 +215,8 @@ digitalcompanion/
 │       ├── package.json
 │       └── tsconfig.json
 │
-├── supabase/
-│   ├── README.md                  # create project, run migration, service key rules
+├── db/
+│   ├── README.md                  # local Postgres/RDS setup, migration, credential rules
 │   ├── migrations/
 │   │   └── 0001_init.sql
 │   └── seed.sql                   # optional demo person (no real data)
@@ -275,7 +275,7 @@ Public surface exported from `src/index.ts`:
   `SELF_HARM_LINE`.
 - `buildProfileBlock(person)`, `buildSystemPrompt(person)`.
 - Types and Zod schemas for API inputs and DB rows.
-- `createSupabaseClient({ url, serviceRoleKey })` — server-only, throws on missing config.
+- `createDbPool({ connectionString, ssl, sslCaPath })` — server-only, throws on missing config.
 - Guardrails:
   - `checkInputPatterns(text)` → `{ hits, categories, maskedText }`.
   - `classifyInput(text, client?)` → `{ category, confidence }` (Haiku 5.5, structured output).
@@ -284,8 +284,7 @@ Public surface exported from `src/index.ts`:
   - `maskSensitive(text)`.
 - Memory helpers: `addMemoryNote`, `listActiveMemoryNotes`, `deactivateMemoryNote`.
 
-Core must not import LiveKit. It may import `@anthropic-ai/sdk` (classifier), `@supabase/supabase-js`,
-`zod`.
+Core must not import LiveKit. It may import `@anthropic-ai/sdk` (classifier), `pg`, `zod`.
 
 ### `apps/api`
 
@@ -365,7 +364,7 @@ messages and guardrail flags. Explicitly marked "local POC — no auth".
 
 ## 6. Data model
 
-`0001_init.sql` (Postgres/Supabase):
+`0001_init.sql` (Postgres / RDS):
 
 ```sql
 people(
@@ -489,8 +488,8 @@ DEEPGRAM_API_KEY=
 LIVEKIT_URL=
 LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=postgres://companion:companion_dev@localhost:5432/digitalcompanion
+DATABASE_SSL=false
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 NEXT_PUBLIC_LIVEKIT_URL=
 API_PORT=4000
@@ -560,7 +559,7 @@ Part 1 (now):
 Part 2 (designed, not built):
 
 - Terraform in `devops/terraform/`: VPC, ECR, ECS Fargate (api + agent) or Lambda for API, ALB/API
-  Gateway, Secrets Manager, CloudWatch, S3. Supabase and LiveKit Cloud stay managed.
+  Gateway, Secrets Manager, CloudWatch, S3. RDS and LiveKit Cloud stay managed.
 - GitHub OIDC → AWS role, no long-lived keys. Environments `dev` and `prod` with approval gate on
   `prod`.
 - Web: S3 + CloudFront static Next export; Capacitor wrapper later.
@@ -593,7 +592,7 @@ Part 2 must not start before Part 1 acceptance passes.
 - Logs: never log raw messages or identifiers; log IDs, categories, timings. Mask before persistence
   and before classifier calls.
 - Emergency disclaimer is product text, not a substitute for emergency services.
-- Supabase RLS enabled with no anon policies; only service role writes.
+- Postgres RLS enabled with no public policies; only the server-side DB user writes.
 - Dependency and secret scanning can be added to CI in Part 2 (CodeQL, Dependabot, push protection).
 
 ---
@@ -607,8 +606,8 @@ Each phase is one or more conventional commits, pushed to `origin/main`.
 | 0 | Plan | this document + brief | `docs: add master plan and initial brief` |
 | 1 | Skeleton | workspace, root configs, .env examples, .gitignore, .nvmrc, scripts, empty app shells | `chore: scaffold pnpm monorepo` |
 | 2 | Docs + agents | README, docs/main, architecture docs, AGENTS/CLAUDE per app, Copilot, .claude settings, history, cross-links | `docs: establish project documentation and agent operating system` |
-| 3 | Database | `0001_init.sql`, seed, supabase README | `feat(db): add initial schema` |
-| 4 | Core | types, persona, guardrails, classifier, supabase, memory, tests | `feat(core): add persona, guardrails and shared contracts` |
+| 3 | Database | `0001_init.sql`, seed, db README | `feat(db): add initial schema` |
+| 4 | Core | types, persona, guardrails, classifier, pg pool, memory, tests | `feat(core): add persona, guardrails and shared contracts` |
 | 5 | API | Express app, chat SSE, token, people/conversations, anthropic policy, tests/docs | `feat(api): add chat, voice token and admin endpoints` |
 | 6 | Agent | LiveKit worker, custom Anthropic LLM, hooks, recorder, docs | `feat(agent): add LiveKit voice companion` |
 | 7 | Web | companion screen, voice/text flows, admin, styles | `feat(web): add large-type companion and admin screens` |
@@ -616,7 +615,7 @@ Each phase is one or more conventional commits, pushed to `origin/main`.
 | 9 | Verify | install, lint, typecheck, tests, build; fix; final README + decision log; push | `chore: verify part 1 acceptance` |
 
 Verification is not a substitute for the manual demo: the final report must state what was run and
-what could not be verified without real API keys (voice conversation, Deepgram, LiveKit, Supabase
+what could not be verified without real API keys (voice conversation, Deepgram, LiveKit, RDS
 migration).
 
 ---
@@ -667,7 +666,7 @@ quality. Everything else is testable locally or with mocks.
 | API chat SSE, token, people/conversations, health | `apps/api/src/routes/` |
 | Persona and profile injection | `packages/core/src/persona.ts` |
 | Input/output guardrails + tests | `packages/core/src/guardrails/`, `test/` |
-| Supabase tables | `supabase/migrations/0001_init.sql` |
+| Postgres tables | `db/migrations/0001_init.sql` |
 | Root scripts, README, Dockerfiles, latency logs | root `package.json`, README, app Dockerfiles, agent recorder |
 | Deployment-ready structure (Part 2) | `devops/`, docs/devops.md, docs/planning/02-part2-roadmap.md |
 | Agent files, cross-links, history | root/app `CLAUDE.md`, `AGENTS.md`, docs/, docs/history/ |

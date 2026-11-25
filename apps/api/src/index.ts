@@ -1,5 +1,6 @@
 import { createApp } from './app.js';
 import { config } from './config.js';
+import { closeStore } from './services/store.js';
 
 const app = createApp();
 
@@ -9,7 +10,9 @@ const server = app.listen(config.port, () => {
 
 function shutdown(signal: string): void {
   console.log(`[api] ${signal} received, shutting down`);
-  server.close(() => process.exit(0));
+  server.close(() => {
+    void closeStore().finally(() => process.exit(0));
+  });
 }
 
 process.on('SIGINT', () => shutdown('SIGINT'));

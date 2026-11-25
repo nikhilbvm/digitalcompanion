@@ -10,11 +10,7 @@ import {
 } from '@livekit/agents';
 import * as deepgram from '@livekit/agents-plugin-deepgram';
 import * as silero from '@livekit/agents-plugin-silero';
-import {
-  createSupabaseClient,
-  mapPerson,
-  type PersonRow,
-} from '@companion/core';
+import { createDbPool, mapPerson, type PersonRow } from '@companion/core';
 import { assertAgentConfig, config } from './config.js';
 import { CompanionAgent } from './companion-agent.js';
 import { CompanionAnthropicLLM } from './llm/anthropic.js';
@@ -51,28 +47,31 @@ export default defineAgent({
       return;
     }
 
-    const supabase = createSupabaseClient({
-      url: config.supabaseUrl,
-      serviceRoleKey: config.supabaseServiceRoleKey,
+    const db = createDbPool({
+      connectionString: config.databaseUrl,
+      ssl: config.databaseSsl,
+      sslCaPath: config.databaseSslCa || undefined,
     });
 
-    const { data, error } = await supabase
-      .from('people')
-      .select('*')
-      .eq('id', metadata.personId)
-      .maybeSingle();
-
-    if (error || !data) {
+    let person: ReturnType<typeof mapPerson>;
+    try {
+      const { rows } = await db.query<PersonRow>('select * from people where id = $1', [
+        metadata.personId,
+      ]);
+      const row = rows[0];
+      if (!row) throw new Error('person not found');
+      person = mapPerson(row);
+    } catch (error) {
       console.error(
         '[agent] could not load person:',
-        error?.message ?? 'person not found',
+        error instanceof Error ? error.message : error,
       );
+      await db.end();
       ctx.shutdown('person not found');
       return;
     }
 
-    const person = mapPerson(data as PersonRow);
-    const recorder = new Recorder(supabase, metadata.conversationId);
+    const recorder = new Recorder(db, metadata.conversationId);
 
     const llm = new CompanionAnthropicLLM({
       apiKey: config.anthropicApiKey,
@@ -125,6 +124,7 @@ export default defineAgent({
       await closed;
     } finally {
       await recorder.endConversation();
+      await db.end();
     }
   },
 });

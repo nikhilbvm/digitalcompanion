@@ -19,7 +19,7 @@ web: Talk now
       LiveKit creates the room and dispatches the named worker
   → agent job starts
       parse ctx.job.metadata
-      load person from Supabase
+      load person from Postgres
       build system text (persona + profile)
       AgentSession (Deepgram STT/TTS, Silero VAD, inference.TurnDetector, CompanionAnthropicLLM)
       session.start({ agent, room: ctx.room })

@@ -12,10 +12,11 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 
 | Area | Status |
 |---|---|
-| Knowledge capture (docs, agent files, history, cross-links) | **Good** — 40 docs, 0 broken links, decision log + session record |
+| Knowledge capture (docs, agent files, history, cross-links) | **Good** — 41 docs, 0 broken links, decision log + session record |
 | Monorepo structure and package boundaries | **Good** — pnpm workspaces, one-way dependencies, apps bundle core |
 | Run all apps locally | **Good** — verified web/api/agent start paths; real voice needs keys |
 | Build all apps in CI | **Good** — lint, typecheck, 66 tests, Next/tsup builds |
+| Database (AWS-only) | **Good** — Postgres via `pg` for local Docker/RDS; migration and Store SQL exercised in CI |
 | Build API/agent containers | **Good** — CI builds both, smoke-tests API `/health`, and confirms the agent image boots to its config check |
 | Publish images via GitHub | **Partial** — manual GHCR workflow; no release/version automation |
 | Deploy to cloud via GitHub | **Not implemented** — Part 2 (Terraform, environments, deploy workflow) |
@@ -24,6 +25,9 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 ## What was checked
 
 - `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm verify`.
+- CI applies the schema to a real Postgres service and exercises the Store SQL (`db-smoke.ts`).
+- Local Postgres: `pnpm db:up`, `pnpm db:migrate`, `pnpm db:seed`; Store smoke test; API `/health`
+  with `database:true`, `/people` reads and writes, `/chat` 503 without Anthropic.
 - Built API health and 503 behavior; `PORT` fallback; dev-mode `tsx` API.
 - Built web `/` and `/admin`; root `.env` values inlined into the Next build.
 - Agent missing-env behavior and build.
@@ -40,6 +44,7 @@ workflow, no auth). That is Part 2 by design, not an accidental gap.
 | API only read `API_PORT` | Cloud runtimes that inject `PORT` would bind the wrong port | `apps/api/src/config.ts` falls back to `PORT`; verified on port 4100 |
 | Dockerfiles relied on corepack auto-resolution | Less deterministic builds | `corepack prepare pnpm@10.34.9 --activate` in both Dockerfiles |
 | CI never built the Dockerfiles | Container regressions could ship unnoticed | New `docker` job builds both images, starts the API to check `/health`, and runs the agent with no env to prove the bundle/native modules load; both pass |
+| Supabase was the database | Not AWS-only | Replaced with a server-side `pg` pool, `db/` migrations, Docker Postgres locally and an RDS target; CI applies the schema and runs a Store smoke test |
 | Cloud runtime assumptions were under-documented | Hosting mistakes likely | Added cloud runtime notes to [docs/devops.md](../devops.md) and the env contract |
 
 ## Remaining gaps before a cloud deployment
@@ -49,8 +54,8 @@ These are intentional Part 2 items, not bugs in Part 1:
 1. **No deploy workflow.** `docker-publish.yml` pushes images to GHCR manually; nothing deploys them.
    Part 2 adds ECR, ECS/Lambda, GitHub Environments and deploy tags.
 2. **No Terraform yet.** `devops/terraform/` is a README-only placeholder with the planned modules.
-3. **No migration automation.** Apply `supabase/migrations/0001_init.sql` manually until a migration
-   job exists.
+3. **No deploy-time migration automation.** CI applies `db/migrations/0001_init.sql` to a throwaway
+   Postgres, but a real RDS migration job in the deploy workflow is still Part 2.
 4. **No web container.** The web app is a static Next export for S3 + CloudFront; `NEXT_PUBLIC_*`
    must be set in the build environment. Local builds load the root `.env`.
 5. **No auth, rate limits, audit log, retention, or human escalation.** Do not expose the POC
@@ -87,7 +92,8 @@ docker build -f apps/agent/Dockerfile -t companion-agent .
 docker run --rm --env-file .env companion-agent
 ```
 
-- Outbound only: LiveKit Cloud, Deepgram, Anthropic, Supabase. No inbound port or load balancer.
+- Outbound to LiveKit Cloud, Deepgram and Anthropic; RDS over the private VPC network. No inbound port
+  or load balancer.
 - `AGENT_NAME` must match the API's token dispatch name.
 - Needs `ffmpeg`/CA certificates, included in the image.
 
@@ -101,9 +107,9 @@ docker run --rm --env-file .env companion-agent
 
 ### Database and LiveKit
 
-- Run `supabase/migrations/0001_init.sql` once per Supabase project.
-- Use a separate Supabase project and LiveKit project per environment.
-- Keep the Supabase service role key in the API/agent secret store only.
+- Run `db/migrations/0001_init.sql` once per RDS database.
+- Use a separate RDS database and LiveKit project per environment.
+- Keep `DATABASE_URL` and its credentials in the API/agent secret store only.
 
 ## Recommended next sequence
 

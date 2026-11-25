@@ -44,8 +44,8 @@ the repo.
 
 | Environment | Purpose | Approval | Services |
 |---|---|---|---|
-| `dev` | integration/staging | no | Supabase dev project, LiveKit dev project, AWS dev |
-| `prod` | family use | yes (required reviewer) | Supabase prod, LiveKit prod, AWS prod |
+| `dev` | integration/staging | no | RDS dev database, LiveKit dev project, AWS dev |
+| `prod` | family use | yes (required reviewer) | RDS prod database, LiveKit prod, AWS prod |
 
 Same variable contract as [`.env.example`](../.env.example). See
 [devops/environments/README.md](../devops/environments/README.md).
@@ -61,7 +61,7 @@ Same variable contract as [`.env.example`](../.env.example). See
 | Web (`apps/web`) | **AWS S3 + CloudFront** | The UI is client-only, so it builds to a static `out/` directory; CloudFront serves it with TLS and caching. AWS Amplify Hosting is an alternative if preview builds are needed. |
 | API (`apps/api`) | **AWS ECS Fargate** | Normal container, long-lived; `createApp()` also allows Lambda/API Gateway later. |
 | Voice agent (`apps/agent`) | **AWS ECS Fargate** | Long-lived worker with native modules; outbound to LiveKit only, no inbound listener. |
-| Database | **Supabase** | Managed Postgres, backups, RLS. |
+| Database | **Amazon RDS for PostgreSQL** | Private subnets, encryption at rest, automated backups. Aurora Serverless v2 is the scale-up option. |
 | Media / voice | **LiveKit Cloud** | Managed rooms, agent dispatch, TURN. |
 | LLM / STT / TTS | **Anthropic / Deepgram** | Managed APIs. |
 | Secrets | AWS Secrets Manager + GitHub Environments (Part 2) | No secrets in git. |
@@ -77,18 +77,19 @@ GitHub Actions (OIDC → AWS role, no static keys)
   └── deploy (manual, version + env)
         ├── ECS Fargate service: api (behind ALB or API Gateway)
         ├── ECS Fargate service: agent (LiveKit worker, no inbound)
-        └── migration job (supabase CLI or psql)
+        └── migration job (psql or a one-off ECS task)
 
 AWS
   ├── VPC: public ALB + private tasks
   ├── ECR: api/agent images
   ├── ECS Fargate: api, agent
+  ├── RDS PostgreSQL: private subnets, encryption, backups, TLS
   ├── ALB + WAF (or API Gateway + Lambda for api)
-  ├── Secrets Manager: ANTHROPIC/DEEPGRAM/LIVEKIT/SUPABASE
+  ├── Secrets Manager: ANTHROPIC/DEEPGRAM/LIVEKIT/DATABASE_URL
   ├── CloudWatch: logs, metrics, alarms
   └── S3: optional exports/backups
 
-Managed: Supabase Postgres · LiveKit Cloud · Anthropic · Deepgram
+Managed: Amazon RDS · LiveKit Cloud · Anthropic · Deepgram
 Web: S3 + CloudFront (static Next export); Capacitor wrapper later
 ```
 
@@ -123,7 +124,7 @@ aws cloudfront create-invalidation --distribution-id <id> --paths '/*'
 - Default root object: `index.html`. Optional custom error response: 404 → `/404.html`.
 - Cache HTML briefly (`no-cache` or a short TTL) and hashed `/_next/static/*` assets aggressively.
 - Build with `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` set; they are inlined.
-- No server is required; do not put the Supabase service role key in this build environment.
+- No server is required; do not put `DATABASE_URL` or any server secret in this build environment.
 
 ### Terraform layout (placeholder)
 
@@ -180,9 +181,9 @@ Part 1 logs structured JSON to stdout (`chat_turn`, `voice_turn`) without messag
 - GitHub OIDC to AWS; no long-lived AWS keys.
 - Least-privilege task roles; agent has no inbound network.
 - Secrets rotated on a schedule; old keys revoked.
-- Supabase service role key never in the web bundle.
+- `DATABASE_URL` and DB credentials never in the web bundle.
 - WAF/rate limits before public exposure; admin auth is mandatory (Part 2).
-- Backup/restore drill for Supabase before family use.
+- Backup/restore drill for RDS before family use.
 - Dependency scanning (Dependabot/CodeQL) and secret scanning enabled in Part 2.
 
 ---

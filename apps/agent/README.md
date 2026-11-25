@@ -18,7 +18,7 @@ source cannot be used directly in those children.
 ## Configuration
 
 Required: `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
-`LIVEKIT_API_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+`LIVEKIT_API_SECRET`, `DATABASE_URL`.
 
 Optional: `AGENT_NAME` (default `companion`), `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `VOICE_MAX_TOKENS`,
 `VOICE_STT_MODEL` (default `nova-3`), `VOICE_TTS_MODEL` (default `aura-2-andromeda-en`).
@@ -29,7 +29,7 @@ Optional: `AGENT_NAME` (default `companion`), `ANTHROPIC_MODEL`, `ANTHROPIC_EFFO
 
 1. The API mints a token with `RoomAgentDispatch{ agentName, metadata: {personId, conversationId} }`.
 2. The participant joins; LiveKit dispatches the worker.
-3. `entry` parses `ctx.job.metadata`, loads the person from Supabase, builds the system text, starts
+3. `entry` parses `ctx.job.metadata`, loads the person from Postgres, builds the system text, starts
    `AgentSession`, and greets by preferred name.
 
 ## Structure
@@ -39,7 +39,7 @@ src/main.ts              defineAgent + ServerOptions + cli.runApp
 src/companion-agent.ts   Agent subclass: onUserTurnCompleted, llmNode, ttsNode
 src/llm/anthropic.ts     custom llm.LLM/LLMStream (effort, cache, refusal)
 src/guardrail-nodes.ts   LLM stream + TTS sentence filtering, first-audio tap
-src/recorder.ts          masked turn/flag persistence, ended_at
+src/recorder.ts          masked turn/flag persistence over Postgres, ended_at
 src/config.ts            env loading + required-variable check
 ```
 

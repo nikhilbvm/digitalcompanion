@@ -17,7 +17,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] `people`, `conversations`, `messages`, `guardrail_flags`, `memory_notes`
 - [x] Indexes, checks, cascades, RLS enabled with no anon policies
 - [x] Seed demo person
-- [ ] **Manual:** run `0001_init.sql` in Supabase and confirm tables
+- [ ] **Manual:** run `0001_init.sql` against local/RDS Postgres and confirm tables
 
 ## Core
 
@@ -29,7 +29,7 @@ code-complete; items marked **manual** need real credentials or a browser.
 - [x] Severity merge and per-turn safety instructions
 - [x] Sentence-level output filter with safe replacement
 - [x] 66 tests covering patterns, masking, output filter, sentence accumulation and the agent stream filter
-- [x] Supabase client factory and memory helpers
+- [x] Postgres pool factory and memory helpers
 
 ## API
 
@@ -100,4 +100,5 @@ pnpm build
 pnpm verify
 ```
 
-Manual checks need: Anthropic, Deepgram, LiveKit Cloud, Supabase keys, a browser with a microphone.
+Manual checks need: Anthropic, Deepgram, LiveKit Cloud, a Postgres/RDS database, and a browser with
+a microphone.

@@ -14,8 +14,8 @@ chatRouter.post('/chat', async (req, res) => {
     return;
   }
 
-  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
-    res.status(503).json({ error: 'not_configured', message: 'Supabase is not configured' });
+  if (!config.databaseUrl) {
+    res.status(503).json({ error: 'not_configured', message: 'DATABASE_URL is not configured' });
     return;
   }
   if (!config.anthropicApiKey) {

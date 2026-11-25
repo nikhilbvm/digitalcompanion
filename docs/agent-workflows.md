@@ -13,7 +13,7 @@ How AI coding agents should work in this repository. The short version is in
 | API | `apps/api/**` | agent voice hooks |
 | Voice | `apps/agent/**` | API routes |
 | Shared behavior | `packages/core/**` + tests | app imports inside core |
-| Schema | new `supabase/migrations/*.sql` | editing applied migrations |
+| Schema | new `db/migrations/*.sql` | editing applied migrations |
 | CI/DevOps | `.github/**`, `devops/**`, `docs/devops.md` | application logic |
 
 If a change crosses boundaries, split it: core contract → app implementation → docs. Keep
@@ -76,7 +76,7 @@ exports. Add a targeted test for every behavior change. For guardrails, always a
 Manual checks that need credentials (state them in the report, do not pretend they passed):
 
 - voice call, mic permission, LiveKit dispatch, Deepgram audio
-- Supabase migration/seed
+- Postgres migration/seed (`pnpm db:migrate` / `pnpm db:seed`)
 - browser dictation/read-aloud
 
 ### DOCUMENT
@@ -132,7 +132,7 @@ human, or stop masking identifiers, refuse and explain why. Offer a safer altern
 
 ## 4. Database change protocol
 
-1. New file `supabase/migrations/000N_description.sql`.
+1. New file `db/migrations/000N_description.sql`.
 2. Use `if not exists` / guarded alters; keep it idempotent.
 3. Backward-compatible for one release (add nullable columns before requiring them).
 4. Update `docs/architecture/data-model.md` and the subproject docs.
@@ -148,7 +148,7 @@ human, or stop masking identifiers, refuse and explain why. Offer a safer altern
 3. Check configuration first: `/health` `configured`, env names, `AGENT_NAME`, ports.
 4. For voice: check worker logs, dispatch metadata, token response, mic permission, Deepgram/LiveKit
    keys.
-5. For text: check SSE frames, API logs, Supabase rows, classifier degradation logs.
+5. For text: check SSE frames, API logs, Postgres rows, classifier degradation logs.
 6. Add a regression test before fixing if the bug is in shared logic.
 7. Do not log secrets or message text to diagnose.
 
@@ -157,7 +157,7 @@ human, or stop masking identifiers, refuse and explain why. Offer a safer altern
 ## 6. Anti-patterns
 
 - Editing `packages/core` to import `@livekit/agents` or an app.
-- Using the Supabase service role key in the browser.
+- Using `DATABASE_URL` or any DB credential in the browser.
 - Adding `temperature`, `top_p`, `top_k`, or assistant prefill to Claude requests.
 - Making the persona dynamic per request (breaks the cache prefix).
 - Replacing the output filter with a prompt instruction only.

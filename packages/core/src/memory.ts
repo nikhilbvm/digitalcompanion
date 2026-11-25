@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DbPool } from './db.js';
 import {
   mapMemoryNote,
   type MemoryNote,
@@ -12,56 +12,51 @@ import {
  */
 
 export async function addMemoryNote(
-  client: SupabaseClient,
+  pool: DbPool,
   input: MemoryNoteInput,
 ): Promise<MemoryNote> {
-  const { data, error } = await client
-    .from('memory_notes')
-    .insert({
-      person_id: input.personId,
-      text: input.text,
-      type: input.type ?? null,
-      source: input.source ?? null,
-      sensitivity: input.sensitivity,
-      expires_at: input.expiresAt ?? null,
-      active: true,
-    })
-    .select('*')
-    .single();
+  const { rows } = await pool.query<MemoryNoteRow>(
+    `insert into memory_notes
+       (person_id, text, type, source, sensitivity, expires_at, active)
+     values ($1, $2, $3, $4, $5, $6, true)
+     returning *`,
+    [
+      input.personId,
+      input.text,
+      input.type ?? null,
+      input.source ?? null,
+      input.sensitivity,
+      input.expiresAt ?? null,
+    ],
+  );
 
-  if (error) throw new Error(`addMemoryNote: ${error.message}`);
-  return mapMemoryNote(data as MemoryNoteRow);
+  const row = rows[0];
+  if (!row) throw new Error('addMemoryNote: insert returned no row');
+  return mapMemoryNote(row);
 }
 
 export async function listActiveMemoryNotes(
-  client: SupabaseClient,
+  pool: DbPool,
   personId: string,
   limit = 20,
 ): Promise<MemoryNote[]> {
-  const now = new Date().toISOString();
-  const { data, error } = await client
-    .from('memory_notes')
-    .select('*')
-    .eq('person_id', personId)
-    .eq('active', true)
-    .or(`expires_at.is.null,expires_at.gt.${now}`)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) throw new Error(`listActiveMemoryNotes: ${error.message}`);
-  return (data as MemoryNoteRow[]).map(mapMemoryNote);
+  const { rows } = await pool.query<MemoryNoteRow>(
+    `select * from memory_notes
+      where person_id = $1
+        and active = true
+        and (expires_at is null or expires_at > now())
+      order by created_at desc
+      limit $2`,
+    [personId, limit],
+  );
+  return rows.map(mapMemoryNote);
 }
 
 export async function deactivateMemoryNote(
-  client: SupabaseClient,
+  pool: DbPool,
   memoryNoteId: string,
 ): Promise<void> {
-  const { error } = await client
-    .from('memory_notes')
-    .update({ active: false })
-    .eq('id', memoryNoteId);
-
-  if (error) throw new Error(`deactivateMemoryNote: ${error.message}`);
+  await pool.query('update memory_notes set active = false where id = $1', [memoryNoteId]);
 }
 
 /**

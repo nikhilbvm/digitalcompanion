@@ -25,11 +25,20 @@ if [ ! -f .env ]; then
   echo "Created .env from .env.example — fill in the API keys before running."
 fi
 
+if docker info >/dev/null 2>&1; then
+  echo "Starting local Postgres and applying the schema..."
+  bash scripts/db-up.sh
+  bash scripts/db-migrate.sh
+else
+  echo "Docker is not running; skipped local Postgres."
+  echo "Start Docker and run: pnpm db:up && pnpm db:migrate"
+  echo "Or point DATABASE_URL in .env at an existing RDS/Postgres instance."
+fi
+
 echo
 echo "Next steps:"
-echo "  1. Fill .env (Anthropic, Deepgram, LiveKit, Supabase)."
-echo "  2. Run the SQL in supabase/migrations/0001_init.sql in your Supabase project."
-echo "  3. pnpm dev   → web :3000 · api :4000 · agent worker"
-echo "  4. Open http://localhost:3000/admin and create a test person."
+echo "  1. Fill .env (Anthropic, Deepgram, LiveKit; DATABASE_URL is set for local Postgres)."
+echo "  2. pnpm dev   → web :3000 · api :4000 · agent worker"
+echo "  3. Open http://localhost:3000/admin and create a test person."
 echo
 echo "Docs: docs/local-dev.md"

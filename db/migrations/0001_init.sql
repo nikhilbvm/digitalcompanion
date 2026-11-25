@@ -1,10 +1,7 @@
 -- Digital Companion — initial schema
--- Run in the Supabase SQL editor or via `supabase db push`.
--- All access is through the service role key from the API/agent. RLS is
--- enabled with no anon/authenticated policies, so the browser cannot read or
--- write these tables directly.
-
-create extension if not exists pgcrypto;
+-- Run against local Postgres or RDS with `psql "$DATABASE_URL" -f ...`.
+-- The API and agent connect as the database user; the browser never does.
+-- RLS is enabled with no public policies as defense in depth.
 
 create table if not exists public.people (
   id uuid primary key default gen_random_uuid(),
@@ -76,7 +73,7 @@ alter table public.guardrail_flags enable row level security;
 alter table public.memory_notes enable row level security;
 
 comment on table public.people is
-  'Companion users. Care notes are sensitive; service role only.';
+  'Companion users. Care notes are sensitive; server access only.';
 comment on table public.guardrail_flags is
   'Input/output safety flags. detail must never contain raw identifiers.';
 comment on table public.memory_notes is

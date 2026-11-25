@@ -1,6 +1,6 @@
 # CLAUDE.md — packages/core
 
-Shared persona, guardrails, types, Supabase client, memory helpers. **No app or LiveKit imports.**
+Shared persona, guardrails, types, Postgres pool, memory helpers. **No app or LiveKit imports.**
 
 ## Read first
 
@@ -15,7 +15,7 @@ Shared persona, guardrails, types, Supabase client, memory helpers. **No app or 
 - Severity priority: `self_harm > emergency > scam > abuse > medical_question > distress > none`.
   Patterns set the floor; the classifier can only raise it.
 - Mask card/SSN/OTP/Medicare before persistence, classifier calls and logs.
-- `createSupabaseClient` uses the service role key and is server-only. Never export it to the browser.
+- `createDbPool` uses `DATABASE_URL` and is server-only. Never export it to the browser.
 - Types are camelCase; row mappers convert snake_case at the boundary.
 
 ## Commands

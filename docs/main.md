@@ -48,7 +48,7 @@ links back to the root [README](../README.md).
 | API | [apps/api/README.md](../apps/api/README.md) | [main](../apps/api/docs/main.md) · [chat stream](../apps/api/docs/chat-stream.md) | [CLAUDE](../apps/api/CLAUDE.md) |
 | Agent | [apps/agent/README.md](../apps/agent/README.md) | [main](../apps/agent/docs/main.md) · [pipeline](../apps/agent/docs/voice-pipeline.md) | [CLAUDE](../apps/agent/CLAUDE.md) |
 | Core | [packages/core/README.md](../packages/core/README.md) | [main](../packages/core/docs/main.md) | [CLAUDE](../packages/core/CLAUDE.md) |
-| Supabase | [supabase/README.md](../supabase/README.md) | — | — |
+| Database | [db/README.md](../db/README.md) | [data model](architecture/data-model.md) | — |
 | DevOps | [devops/README.md](../devops/README.md) | — | — |
 
 ## Reviews

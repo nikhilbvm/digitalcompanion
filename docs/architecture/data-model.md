@@ -1,7 +1,7 @@
 # Data model
 
-Schema: [`supabase/migrations/0001_init.sql`](../../supabase/migrations/0001_init.sql). Seeder:
-[`supabase/seed.sql`](../../supabase/seed.sql).
+Schema: [`db/migrations/0001_init.sql`](../../db/migrations/0001_init.sql). Seeder:
+[`db/seed.sql`](../../db/seed.sql).
 
 ```
 people 1 ─── n conversations 1 ─── n messages
@@ -10,8 +10,9 @@ people 1 ─── n conversations 1 ─── n messages
   └── n memory_notes
 ```
 
-All access is through the Supabase **service role** from `apps/api` and `apps/agent`. RLS is enabled on
-every table with no anon/authenticated policies, so the browser cannot read or write directly.
+All access is through a server-side Postgres pool (`pg`) from `apps/api` and `apps/agent`. RLS is
+enabled on every table with no public policies as defense in depth; network access is restricted to
+the API/agent security group. The browser cannot read or write directly.
 
 ---
 
@@ -91,11 +92,11 @@ prompts in Part 2; the table exists now so the schema and helpers are stable.
 | Actor | people | conversations | messages | flags | memory_notes |
 |---|---|---|---|---|---|
 | Browser | — | — | — | — | — |
-| API (service role) | read/write | read/write | read/write | read/write | read/write (helpers) |
-| Agent (service role) | read | update `ended_at` | write | write | read (Part 2) |
+| API (`pg` pool) | read/write | read/write | read/write | read/write | read/write (helpers) |
+| Agent (`pg` pool) | read | update `ended_at` | write | write | read (Part 2) |
 
-No anon policies exist. Do not add a broad RLS policy to make a client query work; add an API route
-instead.
+No public policies exist. Do not add a broad RLS policy to make a client query work; add an API route
+instead. The database is private to the VPC/security group.
 
 ---
 

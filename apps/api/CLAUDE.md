@@ -16,7 +16,7 @@ Express API for text chat, LiveKit tokens and admin data.
 - The persona block is cached; safety instructions are separate system blocks.
 - No `temperature`/`top_p`/`top_k`, no prefill. `claude-haiku-5-5`, effort low, check `stop_reason`.
 - Persist masked text only. Flag details never contain raw identifiers.
-- The service role key is server-only.
+- `DATABASE_URL` and its credentials are server-only.
 - The classifier runs in parallel in text mode; pattern hits are synchronous and authoritative.
 - Log IDs, categories and timings — never message text.
 

@@ -8,10 +8,11 @@ Base URL locally: `http://localhost:4000`. JSON bodies; errors are
 ```http
 GET /health
 200 {"ok":true,"version":"0.1.0","uptime":12.3,
-     "configured":{"anthropic":true,"deepgram":true,"livekit":true,"supabase":true}}
+     "configured":{"anthropic":true,"deepgram":true,"livekit":true,"database":true}}
 ```
 
-`configured` is booleans only; it never reveals values. Use it first when debugging.
+`configured` is booleans only; it never reveals values. Use it first when debugging. The database
+database field is `database`.
 
 ## People
 
@@ -90,7 +91,7 @@ so connecting dispatches the worker.
 |---|---|---|
 | 400 | `bad_request` | Zod validation failed |
 | 404 | `not_found` | person/conversation missing or wrong person |
-| 503 | `not_configured` | Supabase/Anthropic/LiveKit env missing |
+| 503 | `not_configured` | Database/Anthropic/LiveKit env missing |
 | 500 | `internal_error` | unexpected server error (message hidden) |
 
 ## Request policy (Anthropic)
@@ -101,8 +102,8 @@ including `refusal` → `REFUSAL_FALLBACK`.
 
 ## Persistence
 
-`src/services/store.ts` is the only writer. It masks `messages.text` again defensively and masks flag
-detail. Conversation history for the LLM is capped by `CHAT_HISTORY_LIMIT` (default 20 messages).
+`src/services/store.ts` is the only writer over a `pg` pool. It masks `messages.text` again
+defensively and masks flag detail. Conversation history for the LLM is capped by `CHAT_HISTORY_LIMIT` (default 20 messages).
 
 ## Tests / checks
 

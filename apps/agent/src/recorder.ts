@@ -1,5 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { maskSensitive, type GuardrailHit } from '@companion/core';
+import { maskSensitive, type DbPool, type GuardrailHit } from '@companion/core';
 
 /**
  * Persists voice turns and flags. Failures are logged but never thrown into
@@ -7,7 +6,7 @@ import { maskSensitive, type GuardrailHit } from '@companion/core';
  */
 export class Recorder {
   constructor(
-    private readonly client: SupabaseClient,
+    private readonly db: DbPool,
     readonly conversationId: string,
   ) {}
 
@@ -29,28 +28,36 @@ export class Recorder {
     if (!safeText) return;
 
     try {
-      const { data, error } = await this.client
-        .from('messages')
-        .insert({
-          conversation_id: this.conversationId,
-          role,
-          text: safeText,
-        })
-        .select('id')
-        .single();
+      const { rows } = await this.db.query<{ id: string }>(
+        `insert into messages (conversation_id, role, text)
+         values ($1, $2, $3)
+         returning id`,
+        [this.conversationId, role, safeText],
+      );
 
-      if (error) throw new Error(error.message);
+      const messageId = rows[0]?.id;
+      if (!messageId) throw new Error('message insert returned no id');
 
       if (hits.length > 0) {
-        const rows = hits.map((hit) => ({
-          conversation_id: this.conversationId,
-          message_id: (data as { id: string }).id,
-          stage,
-          category: hit.category,
-          detail: hit.detail ? maskSensitive(hit.detail) : null,
-        }));
-        const { error: flagError } = await this.client.from('guardrail_flags').insert(rows);
-        if (flagError) throw new Error(flagError.message);
+        const values: unknown[] = [];
+        const placeholders = hits.map((hit, index) => {
+          const base = index * 5;
+          values.push(
+            this.conversationId,
+            messageId,
+            stage,
+            hit.category,
+            hit.detail ? maskSensitive(hit.detail) : null,
+          );
+          return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+        });
+
+        await this.db.query(
+          `insert into guardrail_flags
+             (conversation_id, message_id, stage, category, detail)
+           values ${placeholders.join(', ')}`,
+          values,
+        );
       }
     } catch (error) {
       console.error(
@@ -62,12 +69,12 @@ export class Recorder {
 
   async endConversation(): Promise<void> {
     try {
-      const { error } = await this.client
-        .from('conversations')
-        .update({ ended_at: new Date().toISOString() })
-        .eq('id', this.conversationId)
-        .is('ended_at', null);
-      if (error) throw new Error(error.message);
+      await this.db.query(
+        `update conversations
+            set ended_at = coalesce(ended_at, now())
+          where id = $1`,
+        [this.conversationId],
+      );
     } catch (error) {
       console.error(
         '[agent] failed to end conversation:',

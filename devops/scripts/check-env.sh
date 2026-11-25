@@ -11,7 +11,7 @@ if [ -f .env ]; then
 fi
 
 missing_core=()
-for name in ANTHROPIC_API_KEY SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+for name in ANTHROPIC_API_KEY DATABASE_URL; do
   if [ -z "${!name:-}" ]; then missing_core+=("$name"); fi
 done
 

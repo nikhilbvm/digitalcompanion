@@ -5,7 +5,7 @@ Implementation: `src/services/chat-turn.ts`, `src/services/anthropic.ts`, `src/r
 ```
 POST /chat {personId, conversationId?, message}
   │
-  ├─ validate Zod; check Supabase + Anthropic configured (503 before SSE)
+  ├─ validate Zod; check database + Anthropic configured (503 before SSE)
   ├─ load person; load/created conversation (new if ended/absent)
   ├─ checkInputPatterns(message)            ← synchronous; maskedText
   ├─ save user message (masked) + input flags
@@ -57,7 +57,7 @@ and cannot break framing. The client parser is `apps/web/src/lib/api.ts`.
 |---|---|
 | Client closes | AbortController aborts Claude; partial safe text persisted; no error event |
 | Anthropic error | `error` event; partial safe text persisted |
-| Supabase write fails after stream | `error` event; text may be lost (logged) |
+| Database write fails after stream | `error` event; text may be lost (logged) |
 | Classifier slow | skipped after 600ms; pattern flags already persisted |
 | Refusal | fallback line persisted as the assistant message |
 | Empty response | `EMPTY_REPLY` persisted |

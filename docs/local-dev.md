@@ -1,7 +1,7 @@
 # Local development
 
-Part 1 runs entirely on a laptop with four managed accounts: Anthropic, Deepgram, LiveKit Cloud and
-Supabase. No AWS account is needed until Part 2.
+Part 1 runs on a laptop with three managed accounts (Anthropic, Deepgram, LiveKit Cloud) and a
+Postgres database. Use the included Docker Postgres locally; Amazon RDS is the cloud target.
 
 ---
 
@@ -13,7 +13,7 @@ Supabase. No AWS account is needed until Part 2.
   corepack enable
   corepack prepare pnpm@10.34.9 --activate
   ```
-- Docker (optional; only for building the API/agent images).
+- **Docker** (for the local Postgres service and container builds).
 - A modern browser with microphone access (Chrome/Edge/Safari).
 
 ---
@@ -40,15 +40,23 @@ Supabase. No AWS account is needed until Part 2.
 4. `AGENT_NAME` defaults to `companion`. Keep it identical in the token endpoint and the worker
    (both read the same `.env` in this monorepo).
 
-### Supabase
+### Postgres
 
-1. Create a project at [supabase.com](https://supabase.com) (free tier is fine).
-2. Open **SQL Editor** and run [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql).
-3. Optionally run [`supabase/seed.sql`](../supabase/seed.sql) for a demo person.
-4. Copy **Project URL** and the **service_role** key (Settings → API). Put them in `.env` as
-   `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+Local (recommended for the POC):
 
-The service role key bypasses RLS. It is server-only; never put it in a `NEXT_PUBLIC_*` variable.
+```bash
+pnpm db:up        # start postgres:16 from docker-compose.yml
+pnpm db:migrate   # apply db/migrations/0001_init.sql
+pnpm db:seed      # optional demo person
+```
+
+The defaults in `.env.example` point at
+`postgres://companion:companion_dev@localhost:5432/digitalcompanion` with SSL off.
+
+Amazon RDS (cloud): create a PostgreSQL instance in private subnets, put the connection string in
+Secrets Manager, set `DATABASE_URL` and `DATABASE_SSL=true`, and run `pnpm db:migrate` from a machine
+that can reach it. See [db/README.md](../db/README.md). The database credentials are server-only;
+never put `DATABASE_URL` in a `NEXT_PUBLIC_*` variable.
 
 ---
 
@@ -69,8 +77,9 @@ Fill `.env`:
 | `LIVEKIT_URL` | voice | `wss://…` |
 | `LIVEKIT_API_KEY` | voice | |
 | `LIVEKIT_API_SECRET` | voice | |
-| `SUPABASE_URL` | yes | |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | server-only |
+| `DATABASE_URL` | yes | local compose default or RDS connection string |
+| `DATABASE_SSL` | no | `true` for RDS; `false` locally |
+| `DATABASE_SSL_CA` | no | optional RDS CA bundle path |
 | `NEXT_PUBLIC_API_BASE_URL` | yes | default `http://localhost:4000` |
 | `NEXT_PUBLIC_LIVEKIT_URL` | voice | same as `LIVEKIT_URL` |
 | `AGENT_NAME` | no | default `companion` |
@@ -85,6 +94,8 @@ Optional tuning: `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `M
 ## 4. Run
 
 ```bash
+pnpm db:up        # first run, or after a reboot
+pnpm db:migrate   # first run
 pnpm dev
 ```
 
@@ -153,8 +164,9 @@ pnpm build
 pnpm verify      # all of the above
 ```
 
-`pnpm verify` does not exercise voice, LiveKit, Deepgram or Supabase; those need real credentials and
-a browser.
+`pnpm verify` does not exercise voice, LiveKit, Deepgram or a live RDS instance; those need real
+credentials and a browser. The CI database job applies the schema and exercises the store against a
+throwaway Postgres.
 
 ---
 
@@ -162,11 +174,11 @@ a browser.
 
 | Symptom | Fix |
 |---|---|
-| `/health` returns `configured.supabase:false` | Fill `SUPABASE_URL` + service role key, restart API |
+| `/health` returns `configured.database:false` | Set `DATABASE_URL`, start Postgres, restart API |
 | `/people` returns 503 `not_configured` | Same as above |
-| `/chat` returns 503 | Missing Anthropic or Supabase config |
+| `/chat` returns 503 | Missing Anthropic or database config |
 | Web fetch fails / CORS | API not running, or `CORS_ORIGIN` does not match the web origin |
-| Agent exits with "missing environment variables" | Fill the listed variables; voice needs LiveKit, Deepgram, Supabase and Anthropic |
+| Agent exits with "missing environment variables" | Fill the listed variables; voice needs LiveKit, Deepgram, DATABASE_URL and Anthropic |
 | Agent starts but never joins the room | `AGENT_NAME` mismatch; LiveKit URL/key wrong; check worker logs and token response |
 | Mic permission denied | Allow the mic in browser settings; the web app asks once before connecting |
 | No audio, transcript works | Deepgram TTS key/model issue; check agent logs; try the default `aura-2-andromeda-en` |
@@ -175,11 +187,13 @@ a browser.
 | Port 3000/4000 busy | Change `API_PORT`/`next dev -p`; update `NEXT_PUBLIC_API_BASE_URL` |
 | Next build fails after config changes | Run `pnpm --filter @companion/web build` and read the first error; ensure `transpilePackages` still includes `@companion/core` |
 
-### Verify Supabase data
+### Verify database data
 
-```sql
-select role, text, created_at from messages order by created_at desc limit 20;
-select stage, category, detail, created_at from guardrail_flags order by created_at desc limit 20;
+```bash
+docker compose exec db psql -U companion -d digitalcompanion -c \
+  "select role, text, created_at from messages order by created_at desc limit 20;"
+docker compose exec db psql -U companion -d digitalcompanion -c \
+  "select stage, category, detail, created_at from guardrail_flags order by created_at desc limit 20;"
 ```
 
 Confirm no card/SSN/OTP digits appear in `messages.text` or `guardrail_flags.detail`.

@@ -15,8 +15,9 @@ Secrets Manager. This file lists **names**, never values.
 | `LIVEKIT_API_KEY` | yes | yes | **yes** |
 | `LIVEKIT_API_SECRET` | yes | yes | **yes** |
 | `AGENT_NAME` | yes | yes | no |
-| `SUPABASE_URL` | yes | yes | no |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | yes | **yes** |
+| `DATABASE_URL` | yes | yes | **yes** |
+| `DATABASE_SSL` | yes | yes | no |
+| `DATABASE_SSL_CA` | optional | optional | no |
 | `API_PORT` / `PORT` | optional | optional | no |
 | `CORS_ORIGIN` | yes | yes | no |
 | `CHAT_HISTORY_LIMIT` | optional | optional | no |
@@ -31,11 +32,11 @@ Secrets Manager. This file lists **names**, never values.
 
 | Environment | Protection | Notes |
 |---|---|---|
-| `dev` | none | integration; separate Supabase/LiveKit projects recommended |
+| `dev` | none | integration; separate RDS database and LiveKit project recommended |
 | `prod` | required reviewer | family use; backups and alarms mandatory |
 
 Suggested secret names mirror the variable names so the deployment scripts can map 1:1. Do not add
-`SUPABASE_SERVICE_ROLE_KEY` to any web-host environment; the web app only needs the two
+`DATABASE_URL` to any web-host environment; the web app only needs the two
 `NEXT_PUBLIC_*` values.
 
 ## Rules

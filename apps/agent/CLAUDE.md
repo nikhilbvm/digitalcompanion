@@ -22,6 +22,7 @@ LiveKit voice worker for Digital Companion.
 - `CompanionAnthropicLLM` is the only place for Anthropic request policy: effort low, cached persona,
   no sampling params, refusal fallback.
 - Recorder failures must never cut the audio pipeline; log and continue.
+- `DATABASE_URL` and its credentials are server-only.
 - Do not log transcripts, care notes or identifiers.
 
 ## Commands

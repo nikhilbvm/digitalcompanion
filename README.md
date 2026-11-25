@@ -8,7 +8,7 @@ This repository is a monorepo containing the web app, API, LiveKit voice agent, 
 database migrations, DevOps/CI, documentation, and the agent operating system used to develop it.
 
 > **Status: Part 1 (local POC).** The end-to-end pipeline is implemented. The manual voice demo
-> requires real Anthropic, Deepgram, LiveKit Cloud and Supabase credentials. Part 2 (memory capture,
+> requires real Anthropic, Deepgram, LiveKit Cloud and Postgres/RDS access. Part 2 (memory capture,
 > scheduled check-in calls, AWS/Terraform) is planned in
 > [docs/planning/02-part2-roadmap.md](docs/planning/02-part2-roadmap.md).
 
@@ -26,7 +26,7 @@ database migrations, DevOps/CI, documentation, and the agent operating system us
   read-aloud button.
 - **Every turn** passes through deterministic input checks plus a small Haiku classifier, then an
   output filter on each sentence before it is spoken or shown.
-- **Conversations, messages and guardrail flags** are stored in Supabase and visible in `/admin`.
+- **Conversations, messages and guardrail flags** are stored in Postgres (local Docker or Amazon RDS) and visible in `/admin`.
 
 The fixed persona is openly an AI, never asks for money/codes/identifiers, never gives
 medical/legal/financial advice, never impersonates a person, and routes emergencies to 911/988.
@@ -41,8 +41,8 @@ See [docs/architecture/guardrails.md](docs/architecture/guardrails.md).
 | [`apps/web/`](apps/web/) | Next.js App Router + Tailwind, large-type UI and `/admin` | [README](apps/web/README.md) · [docs](apps/web/docs/main.md) · [CLAUDE](apps/web/CLAUDE.md) |
 | [`apps/api/`](apps/api/) | Express API: text chat SSE, LiveKit tokens, people/conversations | [README](apps/api/README.md) · [docs](apps/api/docs/main.md) · [CLAUDE](apps/api/CLAUDE.md) |
 | [`apps/agent/`](apps/agent/) | LiveKit Agents JS voice worker (Deepgram + Claude) | [README](apps/agent/README.md) · [docs](apps/agent/docs/main.md) · [CLAUDE](apps/agent/CLAUDE.md) |
-| [`packages/core/`](packages/core/) | Persona, guardrails, shared types, Supabase/memory helpers | [README](packages/core/README.md) · [docs](packages/core/docs/main.md) · [CLAUDE](packages/core/CLAUDE.md) |
-| [`supabase/`](supabase/) | SQL migrations and seed data | [README](supabase/README.md) |
+| [`packages/core/`](packages/core/) | Persona, guardrails, shared types, Postgres/memory helpers | [README](packages/core/README.md) · [docs](packages/core/docs/main.md) · [CLAUDE](packages/core/CLAUDE.md) |
+| [`db/`](db/) | SQL migrations, seed data and RDS/local setup | [README](db/README.md) |
 | [`devops/`](devops/) | CI/CD strategy, environment contracts, Part 2 Terraform placeholder | [README](devops/README.md) · [docs](docs/devops.md) |
 | [`.github/`](.github/) | CI, Docker publishing, PR/issue templates, Copilot instructions | [workflows](.github/workflows/) |
 | [`docs/`](docs/) | Architecture, planning, local dev, agent workflows, history | [index](docs/main.md) |
@@ -65,11 +65,13 @@ pnpm install
 
 # 2. Configure
 cp .env.example .env
-# fill in: ANTHROPIC_API_KEY, DEEPGRAM_API_KEY, LIVEKIT_*, SUPABASE_*, NEXT_PUBLIC_*
+# fill in: ANTHROPIC_API_KEY, DEEPGRAM_API_KEY, LIVEKIT_*, DATABASE_URL, NEXT_PUBLIC_*
 
-# 3. Create the database
-#    Supabase dashboard → SQL Editor → run supabase/migrations/0001_init.sql
-#    optional: supabase/seed.sql
+# 3. Start local Postgres and apply the schema
+pnpm db:up
+pnpm db:migrate
+pnpm db:seed        # optional demo person
+# For RDS, set DATABASE_URL + DATABASE_SSL=true and run: pnpm db:migrate
 
 # 4. Run all three apps
 pnpm dev
@@ -101,7 +103,7 @@ Full setup, account creation and troubleshooting: [docs/local-dev.md](docs/local
 ```
 Browser (Next.js, Capacitor-ready)
   ├── livekit-client ──► LiveKit Cloud ──► apps/agent (Deepgram STT/TTS + Claude)
-  └── fetch/SSE ───────► apps/api (Express) ──► Supabase Postgres
+  └── fetch/SSE ───────► apps/api (Express) ──► Postgres (local / RDS)
                                 │
                                 └── Anthropic API (chat + classifier)
 ```

@@ -44,6 +44,59 @@ jobs:
       - name: Build
         run: pnpm build
 
+  database:
+    name: Validate Postgres schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: verify
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: companion
+          POSTGRES_PASSWORD: companion_dev
+          POSTGRES_DB: digitalcompanion
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://companion:companion_dev@localhost:5432/digitalcompanion
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.34.9
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply migration and seed
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/0001_init.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
+
+      - name: Exercise the store SQL
+        run: pnpm --filter @companion/api exec tsx scripts/db-smoke.ts
+
   docker:
     name: Build container images
     runs-on: ubuntu-latest

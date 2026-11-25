@@ -14,7 +14,7 @@ sensitive. Part 1 is a local POC; it is not ready for public deployment.
 | Conversation transcripts | Sensitive | `messages` |
 | Guardrail flags (scam, emergency, self-harm) | Sensitive | `guardrail_flags` |
 | Memory notes (Part 2) | Sensitive | `memory_notes` |
-| API keys (Anthropic, Deepgram, LiveKit, Supabase service role) | Secret | `.env` / secret manager only |
+| API keys and DB credentials (Anthropic, Deepgram, LiveKit, DATABASE_URL) | Secret | `.env` / secret manager only |
 | Prompt-cache content | Derived from persona + profile | Anthropic cache, TTL-limited |
 
 ---
@@ -26,14 +26,15 @@ sensitive. Part 1 is a local POC; it is not ready for public deployment.
 | `ANTHROPIC_API_KEY` | Yes | API + agent |
 | `DEEPGRAM_API_KEY` | Yes | agent |
 | `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` | Yes | API (token) + agent (worker) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | API + agent; bypasses RLS |
+| `DATABASE_URL` | Yes | API + agent; Postgres user for local/RDS |
+| `DATABASE_SSL` / `DATABASE_SSL_CA` | Yes | Enable TLS and optional RDS CA verification |
 | `NEXT_PUBLIC_API_BASE_URL` | Public | Safe |
 | `NEXT_PUBLIC_LIVEKIT_URL` | Public | Safe |
 
 Rules:
 
 - `.env`, `.env.*` (except `.env.example`), `.secrets*` are gitignored.
-- Never put the service role key in a `NEXT_PUBLIC_*` variable or client component.
+- Never put `DATABASE_URL` or any DB credential in a `NEXT_PUBLIC_*` variable or client component.
 - Never log a key, token, transcript, care note or identifier.
 - CI in Part 1 needs no application secrets (lint/typecheck/test/build only). Docker publishing uses
   `GITHUB_TOKEN`.
@@ -47,14 +48,15 @@ Rules:
 1. **No authentication.** `/admin` and all API routes are open. Run locally only; the UI carries a
    warning. Part 2 adds family accounts, sessions and authorization per person.
 2. **No rate limiting.** Add API Gateway/WAF throttles and per-person quotas before exposure.
-3. **No encryption beyond the providers.** Supabase encrypts at rest; TLS is used in transit. A
-   production review should confirm key management and backups.
+3. **No encryption beyond the providers.** RDS encrypts at rest (enable it) and TLS is used in transit
+   (`DATABASE_SSL=true`). A production review should confirm KMS keys, the RDS CA bundle and backups.
 4. **No retention/deletion workflow.** Part 2 must implement per-person retention, export and delete.
 5. **No audit log.** Admin views are unauthenticated and unlogged. Part 2 adds an audit trail.
 6. **No human review queue.** Guardrail flags are visible in admin but nothing routes emergencies to a
    human. Part 2 designs an escalation policy; the app is explicitly not an emergency service.
 7. **Third-party processing.** Transcripts/audio pass through LiveKit Cloud, Deepgram and Anthropic;
-   prompts include care notes. Part 2 needs a data-processing review and consent language.
+   prompts include care notes. The database is in AWS RDS. Part 2 needs a data-processing review and
+   consent language.
 8. **PII in prompt cache.** The persona is cached; profile blocks are not marked cacheable in Part 1.
    Verify cache behavior and retention with Anthropic's policy before production.
 9. **Public GitHub repo.** The repository is public. Keep no secrets, real names, care notes or
@@ -93,7 +95,7 @@ again defensively.
 - [ ] Retention, export and delete flows
 - [ ] Audit logging for admin access
 - [ ] Human escalation policy for emergency/self-harm flags
-- [ ] Data-processing agreements (Anthropic, Deepgram, LiveKit, Supabase, AWS)
+- [ ] Data-processing agreements (Anthropic, Deepgram, LiveKit, AWS)
 - [ ] Incident response and key rotation runbook
 - [ ] Penetration test / threat model review
 - [ ] Accessibility review with older adults
