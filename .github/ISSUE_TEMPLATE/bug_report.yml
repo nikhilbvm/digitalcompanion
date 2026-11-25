@@ -1,0 +1,29 @@
+name: Bug report
+description: Something is broken or behaves unsafely
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the behavior. Do not paste transcripts or personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [web, api, agent/voice, core/guardrails, database, devops, docs]
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Commands / logs
+      description: Paste error messages with secrets and personal data removed.

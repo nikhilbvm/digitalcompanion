@@ -1,0 +1,57 @@
+name: Publish container
+
+# Manual image build. Part 1 publishes to GHCR; Part 2 will push to ECR and deploy.
+# Requires the package scope on GITHUB_TOKEN (packages: write below).
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to build'
+        required: true
+        type: choice
+        default: api
+        options:
+          - api
+          - agent
+      tag:
+        description: 'Image tag (e.g. dev, v0.1.0, sha-abc1234)'
+        required: true
+        default: dev
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build and push ${{ inputs.component }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ inputs.component }}/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ inputs.component }}:${{ inputs.tag }}
+            ghcr.io/${{ github.repository }}/${{ inputs.component }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,31 @@
+name: Task
+description: A scoped change with a clear definition of done
+labels: [task]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / files
+      description: Which subproject and docs are involved?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      description: Tests, docs, manual checks.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: This task does not weaken a guardrail or persona rule
+        - label: This task requires a guardrail change (add tests + docs)
