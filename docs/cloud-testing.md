@@ -6,6 +6,29 @@ This is the Part 2 path. Local E2E is in [testing-local.md](testing-local.md).
 
 ---
 
+## 0. Deployment profile decision
+
+**This AWS account is not eligible for free-tier allowances; every resource below is charged.**
+Do not rely on $0 EC2/RDS or 12-month credits.
+
+The initial cloud POC is deliberately **not** the production topology:
+
+| Area | Initial POC (now) | Production (before real users) |
+|---|---|---|
+| API + agent | One EC2 `t4g.small`, Docker Compose, Caddy TLS | Separate ECS Fargate services behind an ALB |
+| Database | Postgres container on that EC2, EBS volume | Amazon RDS PostgreSQL, Multi-AZ, managed backups |
+| Network | Public subnet, security group 443/SSH only; no ALB/NAT | Private subnets, NAT, ALB, WAF |
+| Web | S3 + CloudFront static export | Same, plus access controls/WAF |
+| Auth | None (temporary, restricted) | Cognito/family auth, per-person authorization |
+| Observability | Basic logs + manual checks | CloudWatch alarms/dashboards, audit trail |
+| Approx. cost | **~$20–25/mo on-demand** | **~$90–150/mo** |
+
+The POC profile is for a short-lived cloud E2E with synthetic data only. Migrating to production is a
+Terraform/profile change plus `pg_dump`/`pg_restore`; the application code and `DATABASE_URL` contract
+stay the same. Do not store real family data on the POC host.
+
+---
+
 ## 1. Accounts and access
 
 | Service | Needed for cloud E2E |
@@ -199,9 +222,9 @@ plus private RDS, S3/CloudFront web, and SSM/Secrets Manager:
 | EC2 `t4g.small` | $12.26 | Spot ≈ $5.84, interruption risk |
 | 20 GB EBS gp3 | $1.60 | |
 | Public IPv4 | $3.65 | |
-| RDS `db.t4g.micro` + 20 GB gp3 | $13.98 | optional; may be $0 on a new-account 12-month free tier |
+| RDS `db.t4g.micro` + 20 GB gp3 | $13.98 | optional; this account is **not** free-tier eligible |
 | Route 53 / S3 / CloudFront / secrets | ~$2–3 | |
-| **Total with RDS** | **~$34 on-demand** | **~$27 Spot**, **~$14–20 with RDS free tier** |
+| **Total with RDS** | **~$34 on-demand** | **~$27 Spot** |
 | **Total without RDS** (Postgres in Docker on EC2) | **~$20 on-demand** | **~$13 Spot** |
 
 Trade-offs: no ALB/NAT, one host, API and agent share CPU/memory, manual security patching, and only
@@ -219,9 +242,8 @@ One 0.5 vCPU / 1 GB task (API + agent containers) in a public subnet, no ALB/NAT
 
 ### D. Free tier / credits
 
-A new AWS account may cover 750 h of `db.t4g.micro` RDS, some EC2 hours, S3/CloudFront and Lambda
-free tiers for 12 months. Fargate, NAT gateways and ALBs have no free tier. Do not build a budget on
-free-tier eligibility without checking the account.
+**Not applicable to this account.** The figures in this document assume all resources are charged
+on demand. Fargate, NAT and ALB have no free tier regardless.
 
 ### Other notes
 

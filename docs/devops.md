@@ -73,6 +73,12 @@ Same variable contract as [`.env.example`](../.env.example). See
 
 ### Hosting decision (default)
 
+> **Initial cloud POC:** a single EC2 `t4g.small` with Docker Compose (API + agent + Postgres + Caddy)
+> and S3 + CloudFront, no ALB/NAT/RDS, ~$20–25/month on demand. This account is not free-tier eligible.
+> The managed profile below is the **production target**, adopted before real users or real data.
+> See [cloud-testing.md](cloud-testing.md).
+
+
 | Component | Target | Why |
 |---|---|---|
 | Web (`apps/web`) | **AWS S3 + CloudFront** | The UI is client-only, so it builds to a static `out/` directory; CloudFront serves it with TLS and caching. AWS Amplify Hosting is an alternative if preview builds are needed. |

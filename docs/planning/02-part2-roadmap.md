@@ -54,6 +54,14 @@ the outcome, and stops after opt-out.
 
 **Goal:** deploy the API and voice agent with managed secrets, observability and a repeatable pipeline.
 
+**Initial POC profile (before real users):** one EC2 `t4g.small` running Docker Compose (API + agent +
+Postgres + Caddy), S3 + CloudFront web, no ALB/NAT/RDS. This account is **not free-tier eligible**, so
+the POC is estimated at ~$20–25/month on-demand. It is for temporary cloud E2E with synthetic data.
+
+**Production profile (change before real users):** RDS PostgreSQL, separate ECS Fargate API/agent
+services, ALB, private subnets/NAT, WAF/auth, backups and alarms. Estimated ~$90–150/month. Migrate
+with `pg_dump`/`pg_restore`; application code and `DATABASE_URL` stay the same.
+
 1. **Terraform modules** in `devops/terraform/`: network, ECR, ECS cluster, API service + ALB/API
    Gateway, agent service (no inbound), Secrets Manager, IAM task roles, CloudWatch, GitHub OIDC role.
 2. **State** — S3 + DynamoDB lock per environment (`dev`, `prod`).

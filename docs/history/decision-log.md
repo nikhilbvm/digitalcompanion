@@ -4,6 +4,23 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-25 — Initial cloud POC uses one EC2; production stays managed AWS
+
+**Decision:** The first cloud E2E runs on one EC2 `t4g.small` with Docker Compose (API, LiveKit agent,
+Postgres, Caddy TLS) and S3 + CloudFront for the web. No ALB, NAT gateway or RDS initially. The
+production profile remains separate ECS Fargate API/agent, ALB, private subnets/NAT and RDS.
+
+**Context:** This AWS account is not eligible for free-tier allowances; all resources are charged.
+The production-shaped stack is ~$90–150/month, while the EC2 POC profile is ~$20–25/month on demand.
+The POC is for temporary cloud E2E with synthetic data only.
+
+**Consequences:** The POC host is a single point of failure with manual backups and no managed
+availability. Migrating to production is a Terraform/profile change plus Postgres `pg_dump`/restore;
+the application code and `DATABASE_URL` contract do not change. Do not store real family data on the
+POC host. See `docs/cloud-testing.md`.
+
+---
+
 ## 2026-11-25 — OpenRouter as the default LLM gateway
 
 **Decision:** Use OpenRouter (`anthropic/claude-haiku-5.5`) for text chat, the safety classifier and
