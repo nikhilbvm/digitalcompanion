@@ -1,0 +1,27 @@
+{
+  "name": "@companion/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared persona, guardrails, types and Supabase helpers for Digital Companion",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./persona": "./src/persona.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
+    "@supabase/supabase-js": "^2.119.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  }
+}
