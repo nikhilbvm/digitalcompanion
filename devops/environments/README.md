@@ -17,7 +17,7 @@ Secrets Manager. This file lists **names**, never values.
 | `AGENT_NAME` | yes | yes | no |
 | `SUPABASE_URL` | yes | yes | no |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | yes | **yes** |
-| `API_PORT` | optional | optional | no |
+| `API_PORT` / `PORT` | optional | optional | no |
 | `CORS_ORIGIN` | yes | yes | no |
 | `CHAT_HISTORY_LIMIT` | optional | optional | no |
 | `MAX_REPLY_TOKENS` | optional | optional | no |

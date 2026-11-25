@@ -130,6 +130,9 @@ importers:
       '@companion/core':
         specifier: workspace:*
         version: link:../../packages/core
+      dotenv:
+        specifier: ^18.0.10
+        version: 18.0.10
       livekit-client:
         specifier: ^2.25.0
         version: 2.25.0(@types/dom-mediacapture-record@1.0.22)

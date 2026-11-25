@@ -43,3 +43,32 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  docker:
+    name: Build container images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: digitalcompanion-api:ci
+
+      - name: Build agent image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/agent/Dockerfile
+          push: false
+          tags: digitalcompanion-agent:ci

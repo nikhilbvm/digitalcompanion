@@ -74,7 +74,7 @@ Fill `.env`:
 | `NEXT_PUBLIC_API_BASE_URL` | yes | default `http://localhost:4000` |
 | `NEXT_PUBLIC_LIVEKIT_URL` | voice | same as `LIVEKIT_URL` |
 | `AGENT_NAME` | no | default `companion` |
-| `API_PORT` | no | default `4000` |
+| `API_PORT` | no | default `4000`; cloud runtimes may inject `PORT` instead |
 | `CORS_ORIGIN` | no | default `http://localhost:3000` |
 
 Optional tuning: `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`,

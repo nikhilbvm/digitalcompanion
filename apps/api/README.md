@@ -32,7 +32,7 @@ Full contract: [docs/main.md](docs/main.md) · SSE detail:
 
 Reads the root `.env` (and `apps/api/.env` if present). Required: `SUPABASE_URL`,
 `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`. Voice tokens additionally need `LIVEKIT_URL`,
-`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `AGENT_NAME`. Optional: `API_PORT`, `CORS_ORIGIN`,
+`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `AGENT_NAME`. Optional: `API_PORT` (or cloud `PORT`), `CORS_ORIGIN`,
 `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `CHAT_HISTORY_LIMIT`, `MAX_REPLY_TOKENS`.
 
 ## Structure

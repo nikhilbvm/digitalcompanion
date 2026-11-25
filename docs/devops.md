@@ -82,6 +82,17 @@ The LiveKit worker is long-lived, spawns job processes, and needs native modules
 VAD). Fargate is a simpler fit than Lambda for the worker. The API can run on Fargate too; Lambda +
 API Gateway remains an option because `createApp()` is separate from `listen()`.
 
+### Cloud runtime notes
+
+- The API reads `API_PORT` or the cloud-provided `PORT` and is the only public service. The agent
+  worker needs outbound access to LiveKit Cloud and no inbound listener.
+- `NEXT_PUBLIC_*` values are inlined into the web build. Set them in the hosting provider's build
+  environment; locally `next.config.ts` loads the root `.env`.
+- The API/agent containers use process environment variables; they do not rely on a mounted `.env`.
+  Local development loads the root `.env` via dotenv.
+- Docker image builds are validated in CI on every push. Deployment is still manual (and not
+  implemented until Part 2).
+
 ### Terraform layout (placeholder)
 
 [`devops/terraform/`](../devops/terraform/) currently contains a README only. Planned modules:

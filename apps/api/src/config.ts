@@ -16,7 +16,8 @@ const effort = (process.env.ANTHROPIC_EFFORT ?? 'low') as
   | 'max';
 
 export const config = {
-  port: Number(process.env.API_PORT ?? 4000),
+  // API_PORT is the local/monorepo name; PORT is what most cloud runtimes set.
+  port: Number(process.env.API_PORT ?? process.env.PORT ?? 4000),
   corsOrigins: (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
     .split(',')
     .map((origin) => origin.trim())
