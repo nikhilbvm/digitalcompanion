@@ -4,6 +4,8 @@ import { BigButton } from './BigButton';
 interface VoicePanelProps {
   status: VoiceStatus;
   transcript: TranscriptLine[];
+  audioBlocked: boolean;
+  onEnableAudio: () => void;
   onEnd: () => Promise<void> | void;
 }
 
@@ -17,7 +19,7 @@ const STATUS_TEXT: Record<VoiceStatus, string> = {
   error: 'Something went wrong.',
 };
 
-export function VoicePanel({ status, transcript, onEnd }: VoicePanelProps) {
+export function VoicePanel({ status, transcript, audioBlocked, onEnableAudio, onEnd }: VoicePanelProps) {
   return (
     <section className="flex w-full flex-col gap-5">
       <div
@@ -52,6 +54,17 @@ export function VoicePanel({ status, transcript, onEnd }: VoicePanelProps) {
           </p>
         ))}
       </div>
+
+      {audioBlocked ? (
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+          <p className="text-2xl text-amber-950">
+            Your browser blocked sound. Tap to hear your companion.
+          </p>
+          <BigButton variant="quiet" onClick={onEnableAudio}>
+            Enable sound
+          </BigButton>
+        </div>
+      ) : null}
 
       <div>
         <BigButton variant="end" onClick={() => void onEnd()}>

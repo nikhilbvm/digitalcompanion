@@ -28,6 +28,7 @@ export default function CompanionPage() {
   const [personId, setPersonId] = useState('');
   const [mode, setMode] = useState<Mode>('home');
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle');
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [messages, setMessages] = useState<ChatMessageView[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export default function CompanionPage() {
     setMessages([]);
     setLastFlag(null);
     setVoiceStatus('idle');
+    setAudioBlocked(false);
   };
 
   const handlePersonChange = (nextPersonId: string): void => {
@@ -82,6 +84,7 @@ export default function CompanionPage() {
     setError(null);
     setLastFlag(null);
     setTranscript([]);
+    setAudioBlocked(false);
     setMode('voice');
 
     const session = new VoiceSession();
@@ -94,6 +97,7 @@ export default function CompanionPage() {
         onTranscript: setTranscript,
         onConversationId: setConversationId,
         onError: setError,
+        onAudioBlocked: setAudioBlocked,
       },
       conversationId ?? undefined,
     );
@@ -256,7 +260,13 @@ export default function CompanionPage() {
       ) : null}
 
       {mode === 'voice' ? (
-        <VoicePanel status={voiceStatus} transcript={transcript} onEnd={endVoice} />
+        <VoicePanel
+          status={voiceStatus}
+          transcript={transcript}
+          audioBlocked={audioBlocked}
+          onEnableAudio={() => void voiceRef.current?.enableAudio()}
+          onEnd={endVoice}
+        />
       ) : null}
 
       {mode === 'chat' ? (

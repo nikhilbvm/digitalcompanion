@@ -1,6 +1,6 @@
 'use client';
 
-import { Room, RoomEvent } from 'livekit-client';
+import { Room, RoomEvent, Track } from 'livekit-client';
 import { endConversation, getLivekitToken } from './api';
 
 export type VoiceStatus =
@@ -24,6 +24,8 @@ export interface VoiceSessionHandlers {
   onTranscript: (lines: TranscriptLine[]) => void;
   onConversationId: (conversationId: string) => void;
   onError: (message: string) => void;
+  /** True when the browser blocked autoplay and the user must tap Enable sound. */
+  onAudioBlocked?: (blocked: boolean) => void;
 }
 
 /**
@@ -37,6 +39,8 @@ export class VoiceSession {
   private room: Room | null = null;
   private conversationId: string | null = null;
   private lines = new Map<string, TranscriptLine>();
+  private audioElements = new Set<HTMLMediaElement>();
+  private handlers: VoiceSessionHandlers | null = null;
 
   async start(
     personId: string,
@@ -44,7 +48,9 @@ export class VoiceSession {
     existingConversationId?: string,
   ): Promise<void> {
     this.lines.clear();
+    this.handlers = handlers;
     handlers.onTranscript([]);
+    handlers.onAudioBlocked?.(false);
     handlers.onStatus('requesting-mic');
 
     try {
@@ -99,6 +105,27 @@ export class VoiceSession {
         else handlers.onStatus('listening');
       });
 
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind !== Track.Kind.Audio) return;
+        const element = track.attach();
+        element.autoplay = true;
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        this.audioElements.add(element);
+        element.play().catch(() => handlers.onAudioBlocked?.(true));
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        for (const element of track.detach()) {
+          element.remove();
+          this.audioElements.delete(element);
+        }
+      });
+
+      room.on(RoomEvent.AudioPlaybackStatusChanged, () => {
+        handlers.onAudioBlocked?.(!room.canPlaybackAudio);
+      });
+
       room.on(RoomEvent.Disconnected, () => {
         handlers.onStatus('ended');
       });
@@ -111,6 +138,15 @@ export class VoiceSession {
 
       await room.connect(token.url, token.token, { autoSubscribe: true });
       await room.localParticipant.setMicrophoneEnabled(true);
+
+      // Remote audio is attached above; this unlocks playback if the browser
+      // requires a user gesture. If it fails, the UI offers Enable sound.
+      try {
+        await room.startAudio();
+      } catch {
+        handlers.onAudioBlocked?.(true);
+      }
+      handlers.onAudioBlocked?.(!room.canPlaybackAudio);
       handlers.onStatus('listening');
     } catch (error) {
       handlers.onStatus('error');
@@ -121,6 +157,16 @@ export class VoiceSession {
       );
       // Also closes the conversation row created by the token request.
       await this.end();
+    }
+  }
+
+  async enableAudio(): Promise<void> {
+    if (!this.room) return;
+    try {
+      await this.room.startAudio();
+      this.handlers?.onAudioBlocked?.(!this.room.canPlaybackAudio);
+    } catch {
+      this.handlers?.onAudioBlocked?.(true);
     }
   }
 
@@ -136,6 +182,8 @@ export class VoiceSession {
   }
 
   private async cleanup(): Promise<void> {
+    for (const element of this.audioElements) element.remove();
+    this.audioElements.clear();
     const room = this.room;
     this.room = null;
     if (!room) return;
