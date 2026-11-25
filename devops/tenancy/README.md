@@ -5,13 +5,24 @@ Digital Companion app deployment, but lives in this repo until it earns its own 
 
 Plan: [docs/planning/03-aws-tenancy.md](../../docs/planning/03-aws-tenancy.md)
 
-## Current state
+## Current state (2026-11-25)
 
-- AWS CLI 2.34.64 and Terraform 1.17.2 installed locally.
-- No AWS profile/SSO yet. IAM Identity Center is not enabled.
-- First step is a one-time **console** enable (the `CreateInstance` API is rejected for organization
-  management accounts), then the CloudShell script below creates the admin permission set/user.
-- No account IDs, root credentials or secrets live in this public repo.
+Applied:
+- AWS CLI 2.34.64, Terraform 1.17.2; IAM Identity Center enabled in `us-east-1`.
+- `TenantAdmin` permission set + SSO user; local profiles `dc-admin` (management) and
+  `dc-tenant-dev` (tenant) authenticate successfully. No root credentials/keys.
+- `tenants` OU with four guardrail SCPs: region lock (`us-east-1`), root-user deny, IAM-user/access-key
+  deny, and organization/CloudTrail protection.
+- First tenant account `digitalcompanion-dev`: active, tagged, moved under `tenants`, SSO
+  `TenantAdmin` assigned, $25/month budget with 50/80/100% alerts. SNS email confirmation is pending.
+- Guardrails tested: a `us-west-2` call and `iam:CreateUser` both fail with an explicit SCP deny.
+
+Next:
+- Confirm the SNS email subscription.
+- Build the internal `create/close/recreate tenant` scripts and the vending control plane.
+- Deploy the cheap POC profile into the tenant.
+
+No account IDs, root credentials, personal emails or secrets live in this public repo.
 
 ## Bootstrap SSO
 

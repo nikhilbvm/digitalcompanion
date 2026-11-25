@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyLeavingOrganization",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:DeregisterDelegatedAdministrator",
+        "organizations:LeaveOrganization",
+        "organizations:RemoveAccountFromOrganization"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProtectCloudTrail",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:DeleteTrail",
+        "cloudtrail:PutEventSelectors",
+        "cloudtrail:PutInsightSelectors",
+        "cloudtrail:StopLogging",
+        "cloudtrail:UpdateTrail"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenySelfClose",
+      "Effect": "Deny",
+      "Action": "account:CloseAccount",
+      "Resource": "*"
+    }
+  ]
+}

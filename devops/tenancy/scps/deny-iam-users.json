@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyLongLivedIamPrincipals",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateAccessKey",
+        "iam:CreateLoginProfile",
+        "iam:CreateServiceSpecificCredential",
+        "iam:CreateUser",
+        "iam:ResetServiceSpecificCredential",
+        "iam:UpdateLoginProfile",
+        "iam:UploadSSHPublicKey"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
