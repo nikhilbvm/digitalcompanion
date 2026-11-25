@@ -63,7 +63,15 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           push: false
+          load: true
           tags: digitalcompanion-api:ci
+
+      - name: Smoke-test API image
+        run: |
+          docker run -d --name dc-api -p 4000:4000 -e API_PORT=4000 digitalcompanion-api:ci
+          curl -fsS --retry 20 --retry-delay 1 --retry-connrefused http://localhost:4000/health
+          docker logs dc-api
+          docker rm -f dc-api
 
       - name: Build agent image
         uses: docker/build-push-action@v7

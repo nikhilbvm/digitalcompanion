@@ -122,6 +122,8 @@ Browser (Next.js, Capacitor-ready)
 - **DevOps:** [docs/devops.md](docs/devops.md) · [devops/README.md](devops/README.md)
 - **Local dev:** [docs/local-dev.md](docs/local-dev.md)
 - **Agent workflows:** [docs/agent-workflows.md](docs/agent-workflows.md)
+- **Review:** [docs/reviews/2026-11-25-setup-review.md](docs/reviews/2026-11-25-setup-review.md) —
+  local/cloud readiness, fixed defects and remaining deployment gaps
 - **History:** [docs/history/decision-log.md](docs/history/decision-log.md)
 - **Full index:** [docs/main.md](docs/main.md)
 

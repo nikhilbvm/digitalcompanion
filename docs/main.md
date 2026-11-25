@@ -51,6 +51,11 @@ links back to the root [README](../README.md).
 | Supabase | [supabase/README.md](../supabase/README.md) | — | — |
 | DevOps | [devops/README.md](../devops/README.md) | — | — |
 
+## Reviews
+
+- [2026-11-25-setup-review.md](reviews/2026-11-25-setup-review.md) — knowledge, monorepo, local and cloud
+  readiness; fixed defects and remaining deployment gaps
+
 ## History
 
 - [history/decision-log.md](history/decision-log.md) — why the architecture looks like this
