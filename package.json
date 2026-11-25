@@ -1,0 +1,29 @@
+{
+  "name": "digitalcompanion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Voice and text AI companion for older adults — monorepo",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "build": "pnpm --filter @companion/api build && pnpm --filter @companion/agent build && pnpm --filter @companion/web build",
+    "start": "bash scripts/start.sh",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @companion/core test",
+    "verify": "bash scripts/verify.sh",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml,css}\" --ignore-path .gitignore"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "concurrently": "^10.0.7",
+    "eslint": "^9.39.5",
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.74.0"
+  }
+}

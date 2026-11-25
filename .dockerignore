@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.log
+.git
+.github
+apps/web
+docs
+devops
+supabase
+.env
+.env.*
+!.env.example
+.DS_Store
+*.md

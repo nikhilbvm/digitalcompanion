@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 10 blocks lifecycle scripts by default. These dependencies need theirs
+# to unpack/download native binaries (esbuild for tsup, onnxruntime for Silero
+# VAD, sharp/local-inference for the LiveKit agent).
+onlyBuiltDependencies:
+  - '@livekit/local-inference'
+  - esbuild
+  - onnxruntime-node
+  - sharp
