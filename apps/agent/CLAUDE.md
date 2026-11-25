@@ -1,0 +1,48 @@
+# CLAUDE.md — apps/agent
+
+LiveKit voice worker for Digital Companion.
+
+## Read first
+
+- [docs/main.md](docs/main.md)
+- [docs/voice-pipeline.md](docs/voice-pipeline.md)
+- [../../docs/architecture/voice-pipeline.md](../../docs/architecture/voice-pipeline.md)
+- [../../docs/architecture/guardrails.md](../../docs/architecture/guardrails.md)
+
+## Invariants
+
+- Build before running: LiveKit forks job processes under plain Node; `dev` and `start` use `dist/`.
+- `AGENT_NAME` must match the API token dispatch name.
+- Job metadata (`ctx.job.metadata`) is the only trusted source of `personId`/`conversationId`.
+- `onUserTurnCompleted` awaits the input guardrail, masks identifiers in the ChatMessage, persists the
+  masked user turn, and sets the per-turn safety instruction.
+- `ttsNode` filters every sentence and persists the **spoken safe text**, not the raw LLM output.
+- `CompanionAnthropicLLM` is the only place for Anthropic request policy: effort low, cached persona,
+  no sampling params, refusal fallback.
+- Recorder failures must never cut the audio pipeline; log and continue.
+- Do not log transcripts, care notes or identifiers.
+
+## Commands
+
+```bash
+pnpm --filter @companion/agent dev
+pnpm --filter @companion/agent typecheck
+pnpm --filter @companion/agent build
+pnpm verify
+```
+
+## Where to change what
+
+| Change | Location |
+|---|---|
+| Session models/VAD/turn detection | `src/main.ts` |
+| Guardrail hooks / persistence timing | `src/companion-agent.ts` |
+| Anthropic request policy | `src/llm/anthropic.ts` |
+| Sentence filter / latency tap | `src/guardrail-nodes.ts` |
+| DB writes | `src/recorder.ts` + core mappers |
+| Env vars | `src/config.ts`, `.env.example`, `docs/local-dev.md` |
+
+## Cross-links
+
+[README](README.md) · [docs](docs/main.md) · [core](../../packages/core/CLAUDE.md) ·
+[api](../../apps/api/CLAUDE.md) · [web](../../apps/web/CLAUDE.md) · [AGENTS](../../AGENTS.md)
