@@ -99,6 +99,24 @@ The LiveKit worker is long-lived, spawns job processes, and needs native modules
 VAD). Fargate is a simpler fit than Lambda for the worker. The API can run on Fargate too; Lambda +
 API Gateway remains an option because `createApp()` is separate from `listen()`.
 
+### Why the API is also a container on Fargate
+
+- **SSE streaming.** `POST /chat` is a long-lived server-sent-event response. Fargate behind an ALB
+  handles it naturally; API Gateway HTTP APIs do not stream responses, and Lambda response streaming
+  would require a Function URL and a different front door.
+- **Warm, stateful process.** The API keeps a `pg` connection pool and warm Anthropic/Express state.
+  Lambda would need RDS Proxy or careful pool management per invocation, plus cold-start latency.
+- **One operational model.** API and agent share the same VPC, RDS security group, Secrets Manager
+  entries, image pipeline, task roles and CloudWatch logs. Running the API on Lambda would add a
+  second deployment and networking model.
+- **The image is already the tested artifact.** CI builds the exact API image, starts it, and checks
+  `/health`; ECS deploys that same image. The Dockerfile is also the local production-parity path.
+
+Lambda is still possible later because the app factory is separate from `listen()`; switching would
+mean adding a Lambda handler/adapter, a streaming-capable front door, and RDS Proxy or a connection
+strategy. For a latency-sensitive chat API with a LiveKit worker already on Fargate, one platform is
+the simpler, more predictable choice.
+
 ### Cloud runtime notes
 
 - The API reads `API_PORT` or the cloud-provided `PORT` and is the only public service. The agent
