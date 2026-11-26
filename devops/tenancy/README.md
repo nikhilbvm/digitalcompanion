@@ -3,7 +3,9 @@
 This folder is for the **account-vending platform** chosen on 2026-11-25. It is separate from the
 Digital Companion app deployment, but lives in this repo until it earns its own private repository.
 
-Plan: [docs/planning/03-aws-tenancy.md](../../docs/planning/03-aws-tenancy.md)
+Account-vending plan: [docs/planning/03-aws-tenancy.md](../../docs/planning/03-aws-tenancy.md)
+Tenant app infrastructure + pipeline plan:
+[docs/planning/04-tenant-infrastructure.md](../../docs/planning/04-tenant-infrastructure.md)
 Model & user-facing explanation: [docs/tenancy-model.md](../../docs/tenancy-model.md)
 Runbook: [RUNBOOK.md](RUNBOOK.md)
 Dated log: [docs/history/aws-tenancy-log.md](../../docs/history/aws-tenancy-log.md)
@@ -22,7 +24,8 @@ Applied:
 
 Next:
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
-- Deploy the cheap POC profile into the tenant.
+- Deploy the cheap POC profile into the tenant with the
+  [tenant infrastructure plan](../../docs/planning/04-tenant-infrastructure.md).
 
 No account IDs, root credentials, personal emails or secrets live in this public repo.
 

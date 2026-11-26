@@ -1,9 +1,13 @@
-# Terraform (Part 2 placeholder)
+# Terraform
 
-No Terraform is written yet. This folder reserves the layout and records the plan so Part 2 can start
-without re-deciding the deployment shape.
+No Terraform is written yet. The **active** plan is the cheap POC tenant stack plus GitHub pipeline in
+[docs/planning/04-tenant-infrastructure.md](../../docs/planning/04-tenant-infrastructure.md):
+EC2 + Docker Compose + EBS Postgres, S3/CloudFront web, SSM secrets, per-tenant state and audit.
 
-## Planned modules
+The module layout below is the **production** shape (ECS/RDS/ALB), kept for the later migration. Do
+not treat it as the first implementation.
+
+## Planned production modules
 
 ```
 terraform/

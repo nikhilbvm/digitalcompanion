@@ -31,8 +31,11 @@ personal data in this public repo; keep those in the local ops record/password m
 - Confirmed the tenant is empty (no app resources, $0 spend) and the budget is active.
 - Switched the budget to **direct EMAIL** subscribers at 50/80/100%; deleted the unused SNS topic.
   No confirmation email is needed.
-- Pending: internal tenant lifecycle scripts/vending control plane; tenant baseline; cheap POC
-  Terraform deployment.
+- Drafted [docs/planning/04-tenant-infrastructure.md](../planning/04-tenant-infrastructure.md):
+  cheap POC Terraform modules, per-tenant state/audit, SSM secrets, ECR/CloudFront/EC2, and the
+  GitHub plan/apply/build/deploy workflows.
+- Pending: approve the plan's open decisions; implement backend bootstrap + Terraform; internal
+  tenant lifecycle scripts/vending control plane; tenant baseline; first cloud deploy.
 
 ## Pending actions
 

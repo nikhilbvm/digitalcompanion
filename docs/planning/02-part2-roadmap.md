@@ -55,8 +55,10 @@ the outcome, and stops after opt-out.
 **Goal:** deploy the API and voice agent with managed secrets, observability and a repeatable pipeline.
 
 **Initial POC profile (before real users):** one EC2 `t4g.small` running Docker Compose (API + agent +
-Postgres + Caddy), S3 + CloudFront web, no ALB/NAT/RDS. This account is **not free-tier eligible**, so
-the POC is estimated at ~$20–25/month on-demand. It is for temporary cloud E2E with synthetic data.
+Postgres), S3 + CloudFront web, API behind CloudFront, no ALB/NAT/RDS. This account is **not
+free-tier eligible**, so the POC is estimated at ~$20–25/month on-demand. It is for temporary cloud
+E2E with synthetic data. Implementation plan:
+[04-tenant-infrastructure.md](04-tenant-infrastructure.md).
 
 **Production profile (change before real users):** RDS PostgreSQL, separate ECS Fargate API/agent
 services, ALB, private subnets/NAT, WAF/auth, backups and alarms. Estimated ~$90–150/month. Migrate

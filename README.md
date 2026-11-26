@@ -123,7 +123,8 @@ Browser (Next.js, Capacitor-ready)
 
 - **Plan:** [docs/planning/00-master-plan.md](docs/planning/00-master-plan.md) ·
   [Part 1 checklist](docs/planning/01-part1-checklist.md) ·
-  [Part 2 roadmap](docs/planning/02-part2-roadmap.md)
+  [Part 2 roadmap](docs/planning/02-part2-roadmap.md) ·
+  [tenant infrastructure](docs/planning/04-tenant-infrastructure.md)
 - **DevOps:** [docs/devops.md](docs/devops.md) · [devops/README.md](devops/README.md)
 - **Local dev:** [docs/local-dev.md](docs/local-dev.md) · [testing](docs/testing-local.md) ·
   [cloud testing](docs/cloud-testing.md)
@@ -137,7 +138,8 @@ Browser (Next.js, Capacitor-ready)
 
 ## Part 2 (planned)
 
-Memory capture and review, scheduled check-in ring, AWS deployment with Terraform (ECS Fargate or
-Lambda), real family authentication, observability, and Capacitor packaging. See
-[docs/planning/02-part2-roadmap.md](docs/planning/02-part2-roadmap.md). Part 2 does not start until
+Memory capture and review, scheduled check-in ring, AWS deployment with Terraform (cheap EC2 POC
+first, then ECS Fargate/RDS), real family authentication, observability, and Capacitor packaging. See
+[docs/planning/02-part2-roadmap.md](docs/planning/02-part2-roadmap.md) and the
+[tenant infrastructure plan](docs/planning/04-tenant-infrastructure.md). Part 2 does not start until
 Part 1 acceptance passes.

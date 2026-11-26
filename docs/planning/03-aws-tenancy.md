@@ -6,7 +6,8 @@ Decisions (2026-11-25):
 - Build the full internal account-vending platform, not just a single manual account.
 - Authenticate with AWS CLI + IAM Identity Center/SSO; no root credentials, no Playwright for IAM.
 - The first app deployment in a tenant uses the cheap POC profile (single EC2 + Docker Postgres/API/
-  agent + Caddy, S3/CloudFront), not the production-shaped ECS/ALB/RDS stack.
+  agent, S3/CloudFront web, API behind CloudFront), not the production-shaped ECS/ALB/RDS stack. The
+  implementation plan is [04-tenant-infrastructure.md](04-tenant-infrastructure.md).
 
 **Phase 1 is an internal/admin vending control plane + CLI. Public self-serve signup is deferred until
 auth, abuse controls and billing mapping are designed.**

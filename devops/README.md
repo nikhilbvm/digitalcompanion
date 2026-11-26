@@ -12,7 +12,7 @@ devops/
 │   ├── check-env.sh         # validate local .env groups
 │   └── smoke.sh             # /health smoke test (+ optional one chat turn)
 └── terraform/
-    └── README.md            # Part 2 placeholder: modules, state, OIDC
+    └── README.md            # active POC plan + later production modules
 ```
 
 ## Pipelines
@@ -54,7 +54,8 @@ CA certificates. `.dockerignore` excludes `.env*` so secrets never enter the bui
 
 ## Part 2
 
-Do not add Terraform before Part 1 acceptance. The planned modules, state layout, GitHub OIDC and
-deployment flow are described in [terraform/README.md](terraform/README.md),
-[docs/devops.md](../docs/devops.md) and
-[docs/planning/02-part2-roadmap.md](../docs/planning/02-part2-roadmap.md).
+Do not add Terraform before Part 1 acceptance. The active tenant/POC plan, state layout, GitHub OIDC
+and deployment flow are described in
+[docs/planning/04-tenant-infrastructure.md](../docs/planning/04-tenant-infrastructure.md); the later
+production module shape is in [terraform/README.md](terraform/README.md) and
+[docs/devops.md](../docs/devops.md).

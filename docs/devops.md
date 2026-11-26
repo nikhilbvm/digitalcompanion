@@ -73,10 +73,11 @@ Same variable contract as [`.env.example`](../.env.example). See
 
 ### Hosting decision (default)
 
-> **Initial cloud POC:** a single EC2 `t4g.small` with Docker Compose (API + agent + Postgres + Caddy)
-> and S3 + CloudFront, no ALB/NAT/RDS, ~$20–25/month on demand. This account is not free-tier eligible.
-> The managed profile below is the **production target**, adopted before real users or real data.
-> See [cloud-testing.md](cloud-testing.md).
+> **Initial cloud POC:** a single EC2 `t4g.small` with Docker Compose (API + agent + Postgres), S3 +
+> CloudFront web, and the API behind a second CloudFront distribution, no ALB/NAT/RDS,
+> ~$20–25/month on demand. This account is not free-tier eligible. The managed profile below is the
+> **production target**, adopted before real users or real data. See [cloud-testing.md](cloud-testing.md)
+> and [planning/04-tenant-infrastructure.md](planning/04-tenant-infrastructure.md).
 
 
 | Component | Target | Why |
@@ -169,7 +170,13 @@ aws cloudfront create-invalidation --distribution-id <id> --paths '/*'
 
 ### Terraform layout (placeholder)
 
-[`devops/terraform/`](../devops/terraform/) currently contains a README only. Planned modules:
+The active tenant/POC implementation plan is
+[planning/04-tenant-infrastructure.md](planning/04-tenant-infrastructure.md). It uses EC2 + Docker
+Compose + EBS Postgres, S3/CloudFront web, SSM secrets, per-tenant Terraform state, and GitHub
+plan/apply/deploy workflows.
+
+[`devops/terraform/`](../devops/terraform/) currently contains a README only. Planned production
+modules:
 
 - `network` — VPC, subnets, security groups
 - `ecr` — repositories and lifecycle policy
@@ -232,7 +239,8 @@ Part 1 logs structured JSON to stdout (`chat_turn`, `voice_turn`) without messag
 ## 8. Open decisions
 
 1. API runtime: ECS Fargate vs Lambda/API Gateway. Default: Fargate for parity with the agent.
-2. Web hosting: **decided = S3 + CloudFront static export**. API/agent stay on AWS ECS Fargate.
+2. Web hosting: **decided = S3 + CloudFront static export**. API/agent use EC2 + Compose for the
+   cheap POC, then ECS Fargate for production.
 3. Terraform state backend: S3+DynamoDB, one state per env.
 4. Image registry: GHCR for Part 1, ECR for Part 2.
 5. Release automation: semantic-release vs manual tags. Default: manual tag for the POC, revisit when
