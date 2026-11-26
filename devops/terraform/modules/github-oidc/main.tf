@@ -26,6 +26,8 @@ locals {
   oidc_provider_arn    = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
   parameter_arn        = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${trimsuffix(var.ssm_parameter_path, "/")}"
   config_parameter_arn = "${local.parameter_arn}/config"
+  github_owner         = split("/", var.github_repo)[0]
+  github_name          = split("/", var.github_repo)[1]
 }
 
 data "aws_iam_policy_document" "assume" {
@@ -47,7 +49,13 @@ data "aws_iam_policy_document" "assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:environment:${var.github_environment}"]
+      # GitHub now emits immutable owner/repo IDs in the subject, for example:
+      # repo:owner@123/repo@456:environment:name
+      # Keep the older name-only form for compatibility.
+      values = [
+        "repo:${var.github_repo}:environment:${var.github_environment}",
+        "repo:${local.github_owner}@*/${local.github_name}@*:environment:${var.github_environment}"
+      ]
     }
   }
 }
