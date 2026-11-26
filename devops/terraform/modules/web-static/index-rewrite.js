@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- CloudFront calls this entry point */
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
