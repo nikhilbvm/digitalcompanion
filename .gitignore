@@ -43,6 +43,12 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 *.tfplan
+**/tfplan
+**/tfplan.*
+**/backend.hcl
+**/*.tfvars
+!**/*.tfvars.example
+**/crash.log
 
 # Supabase local
 supabase/.temp/

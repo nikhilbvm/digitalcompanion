@@ -1,0 +1,114 @@
+#!/bin/bash
+set -euxo pipefail
+
+exec > >(tee -a /var/log/dc-bootstrap.log | logger -t dc-bootstrap -s 2>/dev/console) 2>&1
+
+echo "Digital Companion host bootstrap for ${tenant_name}"
+
+# Packages: Docker engine, AWS CLI (usually preinstalled), CloudWatch agent.
+dnf install -y docker amazon-cloudwatch-agent
+if ! command -v aws >/dev/null 2>&1; then
+  dnf install -y awscli
+fi
+
+# Find the attached data volume. Nitro exposes it as a second non-root disk.
+ROOT_SOURCE=$(findmnt -n -o SOURCE /)
+ROOT_DISK=$(lsblk -no PKNAME "$ROOT_SOURCE" | head -1)
+if [ -n "$ROOT_DISK" ]; then
+  ROOT_DISK="/dev/$${ROOT_DISK}"
+else
+  ROOT_DISK=$(printf '%s' "$ROOT_SOURCE" | sed -E 's/p?[0-9]+$//')
+fi
+
+DATA_DEVICE=""
+for _ in $(seq 1 60); do
+  DATA_DEVICE=$(lsblk -dpno NAME,TYPE | awk '$2 == "disk" {print $1}' | grep -vx "$ROOT_DISK" | head -1 || true)
+  if [ -n "$DATA_DEVICE" ]; then
+    break
+  fi
+  sleep 2
+done
+if [ -z "$DATA_DEVICE" ]; then
+  echo "Data EBS volume was not attached within 120 seconds" >&2
+  exit 1
+fi
+
+if [ -z "$(blkid -o value -s TYPE "$DATA_DEVICE" 2>/dev/null || true)" ]; then
+  mkfs.ext4 -L dc-data "$DATA_DEVICE"
+fi
+install -d -m 0700 /data
+if ! mountpoint -q /data; then
+  mount "$DATA_DEVICE" /data
+fi
+DATA_UUID=$(blkid -s UUID -o value "$DATA_DEVICE")
+if ! grep -q "UUID=$${DATA_UUID}[[:space:]]+/data" /etc/fstab; then
+  echo "UUID=$${DATA_UUID} /data ext4 defaults,nofail 0 2" >> /etc/fstab
+fi
+
+# 2 GB swap gives the 2 GB instance headroom for the API, agent and Postgres.
+if ! swapon --show=NAME --noheadings | grep -qx /swapfile; then
+  if ! fallocate -l 2G /swapfile; then
+    dd if=/dev/zero of=/swapfile bs=1M count=2048
+  fi
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  if ! grep -q '^/swapfile[[:space:]]' /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  fi
+fi
+
+install -d -m 0755 /data/docker /opt/digitalcompanion
+cat > /etc/docker/daemon.json <<'EOF'
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "data-root": "/data/docker"
+}
+EOF
+systemctl enable docker
+systemctl restart docker
+
+# AL2023 does not ship the Compose plugin; install the arm64 binary.
+install -d -m 0755 /usr/local/lib/docker/cli-plugins
+curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+
+# Host memory/swap/disk metrics for the tenant alarms.
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'EOF'
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root"
+  },
+  "metrics": {
+    "namespace": "${cloudwatch_namespace}",
+    "append_dimensions": {
+      "InstanceId": "$${aws:InstanceId}"
+    },
+    "metrics_collected": {
+      "mem": {
+        "measurement": ["mem_used_percent"]
+      },
+      "swap": {
+        "measurement": ["swap_used_percent"]
+      },
+      "disk": {
+        "measurement": ["used_percent"],
+        "resources": ["/", "/data"]
+      }
+    }
+  }
+}
+EOF
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+systemctl enable amazon-cloudwatch-agent
+
+echo "Host bootstrap complete. App images and compose are deployed by CI."

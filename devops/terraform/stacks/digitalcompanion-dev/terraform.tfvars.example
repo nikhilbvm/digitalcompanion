@@ -1,0 +1,7 @@
+aws_region          = "us-east-1"
+project             = "digitalcompanion"
+tenant_name         = "digitalcompanion-dev"
+environment         = "dev"
+instance_type       = "t4g.small"
+github_repo         = "nikhilbvm/digitalcompanion"
+github_environment  = "digitalcompanion-dev"

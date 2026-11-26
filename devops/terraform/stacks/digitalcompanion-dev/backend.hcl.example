@@ -1,0 +1,7 @@
+# Generated locally by devops/tenancy/scripts/bootstrap-tenant-backend.sh.
+# The real backend.hcl is gitignored because it contains the account-specific bucket.
+bucket         = "dc-tfstate-ACCOUNT_ID"
+key            = "digitalcompanion/digitalcompanion-dev/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "dc-tfstate-lock"
+encrypt        = true

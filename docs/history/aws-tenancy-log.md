@@ -40,6 +40,18 @@ personal data in this public repo; keep those in the local ops record/password m
 - Pending: Phase 1 backend bootstrap + Terraform modules + reviewed plan; internal tenant lifecycle
   scripts/vending control plane; tenant baseline; first cloud deploy.
 
+## 2026-11-26 — Phase 1 Terraform and plan
+
+- Added the tenant backend bootstrap script. It created a versioned/encrypted S3 state bucket with
+  public access blocked, a DynamoDB lock table with PITR/deletion protection, and a local-only
+  `backend.hcl`.
+- Added eight POC Terraform modules (network, EC2 app, ECR, artifacts, CloudFront API, web static,
+  GitHub OIDC, observability) and the `digitalcompanion-dev` stack.
+- `terraform validate` passes; `terraform plan` reports **47 to add, 0 to change, 0 to destroy**.
+- No Terraform apply and no application resources. POC remains synthetic-only and backup-free by
+  decision.
+- Pending: review/approve plan; Phase 2 apply; GitHub Environment; first app deploy.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).

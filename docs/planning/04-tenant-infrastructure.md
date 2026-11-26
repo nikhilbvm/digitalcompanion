@@ -1,6 +1,6 @@
 # Tenant infrastructure and deployment plan
 
-Status: **decided 2026-11-26** · Implementation not started
+Status: **Phase 1 implemented 2026-11-26** · Terraform plan generated (47 resources); no apply
 
 Goal: provision and update the Digital Companion resources inside a tenant AWS account from code,
 with one-command local bootstrap and repeatable GitHub build/deploy pipelines, while keeping a dated
@@ -374,7 +374,7 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 | Phase | Work | Done when |
 |---|---|---|
 | 0 | Approve this plan; choose TLS/domain, registry, secrets, database, compute, backups, CI roles, audit and deploy trigger | **done 2026-11-26** |
-| 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | plan is clean and understood |
+| 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | **plan generated: 47 to add, 0 to change/destroy; awaiting approval** |
 | 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | API `/health` OK through CloudFront |
 | 3 | Web S3/CloudFront + full cloud E2E (text, voice, admin) | E2E passes against the tenant |
 | 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | deploy via GitHub, audit entries |

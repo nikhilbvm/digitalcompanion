@@ -10,7 +10,7 @@ Model & user-facing explanation: [docs/tenancy-model.md](../../docs/tenancy-mode
 Runbook: [RUNBOOK.md](RUNBOOK.md)
 Dated log: [docs/history/aws-tenancy-log.md](../../docs/history/aws-tenancy-log.md)
 
-## Current state (2026-11-25)
+## Current state (2026-11-26)
 
 Applied:
 - AWS CLI 2.34.64, Terraform 1.17.2; IAM Identity Center enabled in `us-east-1`.
@@ -21,10 +21,15 @@ Applied:
 - First tenant account `digitalcompanion-dev`: active, tagged, moved under `tenants`, SSO
   `TenantAdmin` assigned, $25/month budget with 50/80/100% **direct email** alerts (no SNS).
 - Guardrails tested: a `us-west-2` call and `iam:CreateUser` both fail with an explicit SCP deny.
+- Phase 1 Terraform state backend created in the tenant (versioned/encrypted S3 + DynamoDB lock);
+  `backend.hcl` is local-only.
+- Terraform POC modules and the `digitalcompanion-dev` stack are written. `terraform plan` shows 47
+  resources to add; **no apply has run**.
 
 Next:
+- Review and approve the plan, then Phase 2 apply (EC2/ECR/CloudFront with Postgres on EBS).
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
-- Deploy the cheap POC profile into the tenant with the
+- Add the tenant baseline (CloudTrail) and first app deploy with the
   [tenant infrastructure plan](../../docs/planning/04-tenant-infrastructure.md).
 
 No account IDs, root credentials, personal emails or secrets live in this public repo.

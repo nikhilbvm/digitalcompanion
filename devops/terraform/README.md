@@ -1,11 +1,32 @@
 # Terraform
 
-No Terraform is written yet. The **active** plan is the cheap POC tenant stack plus GitHub pipeline in
-[docs/planning/04-tenant-infrastructure.md](../../docs/planning/04-tenant-infrastructure.md):
-EC2 + Docker Compose + EBS Postgres, S3/CloudFront web, SSM secrets, per-tenant state and audit.
+The **active POC** is implemented in this folder: EC2 + Docker Compose + EBS Postgres,
+S3/CloudFront web, SSM secrets, per-tenant state and audit. See
+[docs/planning/04-tenant-infrastructure.md](../../docs/planning/04-tenant-infrastructure.md) and the
+tenant stack at [stacks/digitalcompanion-dev](stacks/digitalcompanion-dev/README.md).
+
+Phase 1 status: the state backend exists and `terraform plan` reports **47 resources to add**; no
+`apply` has been run.
 
 The module layout below is the **production** shape (ECS/RDS/ALB), kept for the later migration. Do
 not treat it as the first implementation.
+
+## Implemented POC modules
+
+```
+terraform/
+├── modules/
+│   ├── network-minimal/   # VPC, public subnet, CloudFront-only API SG
+│   ├── ec2-app/           # EC2/EIP/EBS, IAM, Docker/Compose bootstrap
+│   ├── ecr/               # api/agent repositories
+│   ├── s3-artifacts/      # deploy bundles/migrations
+│   ├── cloudfront-api/    # HTTPS API distribution
+│   ├── web-static/        # S3 + CloudFront OAC + index rewrite
+│   ├── github-oidc/       # separate infra/deploy roles
+│   └── observability/     # log groups + alarms
+└── stacks/
+    └── digitalcompanion-dev/
+```
 
 ## Planned production modules
 
