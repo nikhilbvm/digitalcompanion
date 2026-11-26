@@ -47,6 +47,15 @@ No account IDs, emails or secrets here.
   locally in the gitignored `.secrets/` file.
 - Static web deployment and CloudTrail remain pending. POC data is synthetic-only with no backups.
 
+## 2026-11-26 — static web deployment
+
+- Built the Next static export with the cloud API URL inlined and uploaded it to the private web S3
+  bucket; CloudFront invalidation completed.
+- Home and `/admin/` return 200, `/admin` rewrites correctly, and missing routes return 404.
+- The API returns `Access-Control-Allow-Origin` for the exact web CloudFront origin.
+- No web build environment contains `DATABASE_URL` or server secrets.
+- CloudTrail remains the outstanding tenant-baseline item.
+
 <!-- Template:
 ## YYYY-MM-DD — action
 Actor:

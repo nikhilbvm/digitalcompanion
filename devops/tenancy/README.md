@@ -28,12 +28,14 @@ Applied:
 - Secrets are in SSM; ARM64 API/agent images are in ECR; Postgres, API and agent are deployed via
   SSM. Cloud E2E passed 21/21 including a dispatched voice greeting. GitHub Environment variables are
   configured.
-- The static web build and CloudTrail baseline are not deployed yet.
+- The static web build is live on S3/CloudFront; home/admin return 200, trailing-slash routing and
+  the API CORS header are verified.
+- The CloudTrail baseline is not enabled yet.
 
 Next:
-- Deploy the static web build (Phase 3) and enable CloudTrail.
+- Enable CloudTrail and add the GitHub plan/build/deploy workflows (Phase 4).
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
-- Add the GitHub plan/build/deploy workflows (Phase 4).
+- Keep the POC synthetic-only and backup-free; add RDS/backups before real users.
 
 No account IDs, root credentials, personal emails or secrets live in this public repo.
 

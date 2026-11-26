@@ -12,7 +12,7 @@ and GitHub Environment variables.
 | Terraform stack | `devops/terraform/stacks/digitalcompanion-dev` |
 | State key | `digitalcompanion/digitalcompanion-dev/terraform.tfstate` |
 | Budget | $25/month, 50/80/100% direct email alerts |
-| Status | Phase 2 app deployed: API, voice agent and Postgres live; web build/CloudTrail pending |
+| Status | Web, API, voice agent and Postgres live; CloudTrail pending |
 
 ## Links
 
@@ -25,5 +25,7 @@ and GitHub Environment variables.
 
 - The POC uses synthetic data only. There is no database backup automation by decision; data is
   disposable and rebuildable from migrations/seed.
-- The API is reached through a CloudFront default domain; no custom domain is configured.
+- The API and web are reached through CloudFront default domains; no custom domain is configured.
 - SSM Session Manager is the only host shell path; there is no SSH ingress.
+- Local `pnpm dev` and cloud both use the LiveKit agent name `dc` by default; change the local name
+  (for example `AGENT_NAME=dc-local`) before running both, or dispatches may cross over.

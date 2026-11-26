@@ -76,6 +76,14 @@ personal data in this public repo; keep those in the local ops record/password m
 - Postgres is loopback-bound for SSM maintenance only. Static web and CloudTrail baseline are the
   remaining Phase 2/3 items.
 
+## 2026-11-26 — static web deployed
+
+- Built the static export with the cloud API base URL and uploaded it to the private S3 bucket;
+  CloudFront invalidation completed.
+- Home and admin return 200, trailing-slash routing and 404 behavior are correct, and the API CORS
+  header matches the web CloudFront origin.
+- No server secrets are present in the web build. CloudTrail baseline remains pending.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).
