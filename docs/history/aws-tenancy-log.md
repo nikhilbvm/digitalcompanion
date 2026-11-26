@@ -34,8 +34,11 @@ personal data in this public repo; keep those in the local ops record/password m
 - Drafted [docs/planning/04-tenant-infrastructure.md](../planning/04-tenant-infrastructure.md):
   cheap POC Terraform modules, per-tenant state/audit, SSM secrets, ECR/CloudFront/EC2, and the
   GitHub plan/apply/build/deploy workflows.
-- Pending: approve the plan's open decisions; implement backend bootstrap + Terraform; internal
-  tenant lifecycle scripts/vending control plane; tenant baseline; first cloud deploy.
+- Recorded the implementation decisions: CloudFront default API URL, per-tenant ECR, SSM
+  SecureString, Postgres on EC2/EBS, **no POC backups (synthetic data only)**, `t4g.small` ARM64,
+  separate `gha-infra`/`gha-deploy` OIDC roles, Git audit + CloudTrail, and manual deploys.
+- Pending: Phase 1 backend bootstrap + Terraform modules + reviewed plan; internal tenant lifecycle
+  scripts/vending control plane; tenant baseline; first cloud deploy.
 
 ## Pending actions
 

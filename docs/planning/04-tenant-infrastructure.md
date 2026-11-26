@@ -1,6 +1,6 @@
 # Tenant infrastructure and deployment plan
 
-Status: **proposed** · Date: 2026-11-26
+Status: **decided 2026-11-26** · Implementation not started
 
 Goal: provision and update the Digital Companion resources inside a tenant AWS account from code,
 with one-command local bootstrap and repeatable GitHub build/deploy pipelines, while keeping a dated
@@ -67,8 +67,7 @@ Internet
                               │
                               ├── SSM Parameter Store SecureString (secrets)
                               ├── ECR (api/agent images)
-                              ├── S3 (deploy bundles, pg_dump backups)
-                              └── DLM EBS snapshots
+                              └── S3 (deploy bundles, migration SQL)
 ```
 
 - TLS: CloudFront default domain for both web and API. No custom domain needed for the POC. Optional
@@ -96,11 +95,11 @@ devops/
 │   │   ├── ec2-app/             # EC2, EIP, data EBS, IAM role/profile,
 │   │   │                        #   user data, SSM/CloudWatch
 │   │   ├── ecr/                 # api/agent repositories + lifecycle
-│   │   ├── s3-artifacts/        # deploy bundles, migrations, pg_dump backups
+│   │   ├── s3-artifacts/        # deploy bundles and migration SQL
 │   │   ├── cloudfront-api/      # HTTPS API distribution to EC2 public DNS:4000
 │   │   ├── web-static/          # S3 + CloudFront OAC + bucket policy
 │   │   ├── github-oidc/         # OIDC provider + deploy roles
-│   │   └── observability/       # log groups, alarms, DLM snapshots
+│   │   └── observability/       # log groups, alarms
 │   ├── stacks/
 │   │   └── digitalcompanion-dev/  # one root per tenant
 │   │       ├── main.tf
@@ -203,8 +202,8 @@ Do not use Terraform workspaces for tenant isolation: a workspace typo can targe
   images; immutable tags recommended.
 
 ### `s3-artifacts`
-- Private, versioned, SSE bucket for deploy bundles, migration SQL and `pg_dump` backups.
-- Instance role reads; `gha-deploy` writes; lifecycle expires old bundles/backups.
+- Private, versioned, SSE bucket for deploy bundles and migration SQL.
+- Instance role reads; `gha-deploy` writes; lifecycle expires old bundles.
 
 ### `cloudfront-api`
 - Origin `http://<EC2-public-dns>:4000` (DNS name required by CloudFront; EIP-backed), origin read
@@ -227,9 +226,9 @@ Do not use Terraform workspaces for tenant isolation: a workspace typo can targe
 
 ### `observability`
 - CloudWatch log groups for API/agent (and CloudFront logs if enabled).
-- Alarms: instance status, CPU, disk, API 5xx/health, agent log errors; SNS/email (direct email)
-  optional.
-- DLM snapshot schedule for the data EBS; retention 7–14 days.
+- Alarms: instance status, CPU, memory/swap, disk, API 5xx/health, agent log errors; SNS/email
+  (direct email) optional.
+- No DLM/snapshot schedule for the POC; this is a deliberate disposable-data decision.
 - Budget stays in the tenancy layer (already $25 direct email).
 
 ---
@@ -307,8 +306,9 @@ Secrets rotation is a script + service restart; no Terraform apply.
   migration image.
 - Run as a one-off compose service (`migrate`, using the `postgres:16` image plus mounted SQL)
   against Postgres before the API restart. Track applied files in a `schema_migrations` table.
-- Back up `/data` (EBS snapshot or `pg_dump` to S3) before a migration in dev; production later uses
-  RDS/backups.
+- The POC has no automated backups by decision. If a migration fails, recreate the database from
+  `db/migrations` + seed. Do not put real family data in this environment.
+- Before real users, switch to RDS with automated backups/point-in-time recovery.
 - Migrations must be backward-compatible for one release.
 
 ### E. Secrets change
@@ -322,7 +322,7 @@ Secrets rotation is a script + service restart; no Terraform apply.
 | Workflow | Trigger | Role | Purpose |
 |---|---|---|---|
 | `terraform-plan.yml` | PR/paths + manual | `gha-infra` | fmt, validate, tflint, plan |
-| `terraform-apply.yml` | manual + environment approval | `gha-infra` | apply saved plan; audit |
+| `terraform-apply.yml` | manual + environment approval | `gha-infra` | fresh plan + apply; audit |
 | `build-images.yml` | push main/manual | `gha-deploy` | build/push API+agent to ECR |
 | `deploy-app.yml` | manual | `gha-deploy` | SSM deploy, migrate, health, audit |
 | `deploy-web.yml` | manual | `gha-deploy` | S3 sync + CloudFront invalidation |
@@ -373,12 +373,12 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 
 | Phase | Work | Done when |
 |---|---|---|
-| 0 | Approve this plan; choose TLS/domain, registry, secrets and backup defaults | decisions recorded |
-| 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack; `terraform plan` review | plan is clean and understood |
-| 2 | Apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | API `/health` OK through CloudFront |
+| 0 | Approve this plan; choose TLS/domain, registry, secrets, database, compute, backups, CI roles, audit and deploy trigger | **done 2026-11-26** |
+| 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | plan is clean and understood |
+| 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | API `/health` OK through CloudFront |
 | 3 | Web S3/CloudFront + full cloud E2E (text, voice, admin) | E2E passes against the tenant |
-| 4 | GitHub OIDC + workflows; move first deploy to CI; audit/tagging | deploy via GitHub, audit entries |
-| 5 | Backups/alarms/runbook/close-recreate rehearsal; prod profile later | restore and close/recreate rehearsed |
+| 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | deploy via GitHub, audit entries |
+| 5 | Alarms/runbook/close-recreate rehearsal; document production gates (RDS/backups, Secrets Manager rotation, custom domain, HA) | alarms and close/recreate rehearsed; gates documented |
 
 ---
 
@@ -393,6 +393,7 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 - No secrets/account IDs in Git; secret scan passes.
 - `AUDIT.md` has infra and deploy entries with dates and image tags.
 - The EC2 public DNS origin is stable across reboots; a replaced EIP triggers a Terraform plan.
+- The POC contains synthetic data only; no real family data, and no backup automation by decision.
 - Cost stays near the $25 budget; alerts configured.
 
 ---
@@ -401,28 +402,38 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 
 | Risk | Mitigation |
 |---|---|
-| Single EC2 host is an availability/resource bottleneck | POC only; alarms + EBS snapshots; production moves to ECS/RDS. |
+| Single EC2 host is an availability/resource bottleneck | POC only; alarms; production moves to ECS/RDS. |
+| 2 GB RAM is tight with API + agent + Postgres | 2 GB swap, memory/swap alarms; upgrade to `t4g.medium` if needed. |
 | Agent native modules may not have a Linux arm64 build | CI builds and boots the arm64 image before apply; fall back to `t3.small` x86 if needed. |
 | CloudFront has a 60s origin read timeout for SSE | Keep replies short, send heartbeat comments; move to ALB/Caddy if responses can exceed it. |
 | CloudFront origin IP/DNS changes | EIP is stable; Terraform owns the public DNS origin and plans a change if the EIP is replaced. |
-| Postgres on EBS has no managed HA/PITR | Daily DLM snapshots + weekly `pg_dump`; restore drill in Phase 5. |
+| Postgres on EBS has no managed HA/backups | POC data is disposable by decision; rebuild from migrations/seed; RDS/backups before real users. |
 | Over-privileged CI role | Separate `gha-infra`/`gha-deploy`, repo/environment trust conditions, review policies. |
 | Secrets leak into state/logs | SSM SecureString values pushed outside Terraform; no `terraform output` of secrets; log redaction. |
 | Audit drift between Git and AWS | CloudTrail + Terraform state + deploy tags are authoritative; `AUDIT.md` is the human summary. |
 
 ---
 
-## 13. Open decisions (recommended defaults)
+## 13. Decisions (2026-11-26)
 
-1. **API TLS entry:** CloudFront default domain (recommended, no domain/ACM) vs Caddy on EC2 plus a
-   custom domain.
-2. **Custom domains:** none for POC (recommended); `dc-dev`/`api-dc-dev` later.
-3. **Image registry:** per-tenant ECR (recommended) vs a central registry with cross-account pulls.
-4. **Secrets:** SSM SecureString (recommended for POC) vs Secrets Manager.
-5. **Database:** Postgres container + EBS (recommended for POC) vs RDS now.
-6. **Backups:** DLM EBS snapshots + weekly pg_dump to S3 (recommended).
-7. **CI roles:** separate `gha-infra` and `gha-deploy` roles (recommended) vs one broad role.
-8. **Audit storage:** Git `AUDIT.md` + deploy tags (recommended) vs DynamoDB only.
+| Decision | Choice |
+|---|---|
+| API entry | CloudFront default HTTPS domain; EC2 public DNS origin; no custom domain/ACM for POC |
+| Image registry | Per-tenant ECR |
+| Secrets | SSM SecureString (manual rotation during POC) |
+| Database | Postgres container on EC2, data volume on EBS |
+| Database backups | **None for the POC**; data is disposable and synthetic-only |
+| Compute | `t4g.small` ARM64; build `linux/arm64` images; CI boot check; x86 fallback if needed |
+| CI access | Separate `gha-infra` and `gha-deploy` OIDC roles |
+| Audit | Git `AUDIT.md` + deploy tags + GitHub Environment history + CloudTrail |
+| Deploy trigger | Manual Terraform apply and manual app/web deploy |
 
-Once these are confirmed, implementation starts with the backend bootstrap + Terraform modules and a
-`terraform plan` — no apply until the plan is reviewed.
+### Production gates (not part of this POC)
+
+- Real family data is blocked until RDS with automated backups/PITR and a restore drill.
+- Move secrets to Secrets Manager with rotation before real users.
+- Add a custom domain/ACM, WAF, auth/consent/retention and HA before production.
+- Use a separate `digitalcompanion-prod` tenant and prod GitHub Environment with reviewers.
+
+Next: Phase 1 — backend bootstrap + Terraform modules + `digitalcompanion-dev` stack, ending in a
+reviewed `terraform plan`. No apply until that plan is reviewed.
