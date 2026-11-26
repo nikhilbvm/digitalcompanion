@@ -4,6 +4,7 @@ This folder is for the **account-vending platform** chosen on 2026-11-25. It is 
 Digital Companion app deployment, but lives in this repo until it earns its own private repository.
 
 Plan: [docs/planning/03-aws-tenancy.md](../../docs/planning/03-aws-tenancy.md)
+Model & user-facing explanation: [docs/tenancy-model.md](../../docs/tenancy-model.md)
 Runbook: [RUNBOOK.md](RUNBOOK.md)
 Dated log: [docs/history/aws-tenancy-log.md](../../docs/history/aws-tenancy-log.md)
 

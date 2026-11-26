@@ -34,6 +34,7 @@ links back to the root [README](../README.md).
 - [01-part1-checklist.md](planning/01-part1-checklist.md) — executable Part 1 checklist and status
 - [02-part2-roadmap.md](planning/02-part2-roadmap.md) — memory, scheduled ring, AWS/Terraform
 - [03-aws-tenancy.md](planning/03-aws-tenancy.md) — chosen account-vending platform, SSO bootstrap and tenant lifecycle
+- [tenancy-model.md](tenancy-model.md) — one organization vs many tenants, and how to explain it to a user
 
 ## Development
 
