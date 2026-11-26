@@ -20,6 +20,8 @@ carry well.
 
 - [decision-log.md](decision-log.md) — ADR-lite entries, newest first.
 - [2026-11-25-part1-build.md](2026-11-25-part1-build.md) — Part 1 build session and verification.
+- [2026-11-25-aws-tenant-bootstrap.md](2026-11-25-aws-tenant-bootstrap.md) — AWS tenant/SSO/SCP bootstrap.
+- [aws-tenancy-log.md](aws-tenancy-log.md) — dated AWS tenancy/account-vending log.
 - [../planning/01-part1-checklist.md](../planning/01-part1-checklist.md) — task status.
 - [../../CHANGELOG.md](../../CHANGELOG.md) — user-visible changes.
 

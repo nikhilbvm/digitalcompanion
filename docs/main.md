@@ -61,6 +61,7 @@ links back to the root [README](../README.md).
 
 ## History
 
+- [history/aws-tenancy-log.md](history/aws-tenancy-log.md) — dated AWS tenancy/SSO/tenant work
 - [history/decision-log.md](history/decision-log.md) — why the architecture looks like this
 - [history/README.md](history/README.md) — what belongs in history
 - [CHANGELOG.md](../CHANGELOG.md) — user-visible changes
