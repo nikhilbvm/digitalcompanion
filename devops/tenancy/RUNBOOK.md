@@ -133,7 +133,6 @@ The application code and `DATABASE_URL` contract do not change between tenants.
 
 ## 7. Pending / next
 
-- Confirm the SNS budget-alert email subscription.
 - Build the internal create/close/recreate scripts and vending control plane.
 - Add tenant baseline (CloudTrail/roles/logging).
 - Add the cheap POC Terraform profile and deploy it into the tenant.

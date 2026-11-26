@@ -16,11 +16,10 @@ Applied:
 - `tenants` OU with four guardrail SCPs: region lock (`us-east-1`), root-user deny, IAM-user/access-key
   deny, and organization/CloudTrail protection.
 - First tenant account `digitalcompanion-dev`: active, tagged, moved under `tenants`, SSO
-  `TenantAdmin` assigned, $25/month budget with 50/80/100% alerts. SNS email confirmation is pending.
+  `TenantAdmin` assigned, $25/month budget with 50/80/100% **direct email** alerts (no SNS).
 - Guardrails tested: a `us-west-2` call and `iam:CreateUser` both fail with an explicit SCP deny.
 
 Next:
-- Confirm the SNS email subscription.
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
 - Deploy the cheap POC profile into the tenant.
 
