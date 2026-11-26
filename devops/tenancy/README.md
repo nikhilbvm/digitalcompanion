@@ -30,11 +30,11 @@ Applied:
   configured.
 - The static web build is live on S3/CloudFront; home/admin return 200, trailing-slash routing and
   the API CORS header are verified.
-- The organization CloudTrail trail is logging; GitHub plan/build/deploy workflows are added, with
-  the first CI run pending.
+- The organization CloudTrail trail is logging and delivering logs; GitHub plan/build/deploy
+  workflows are verified green, including CI-driven app and web deploys.
 
 Next:
-- Run the GitHub workflows once and record the first CI deploy.
+- Finish the close/recreate runbook rehearsal (Phase 5).
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
 - Keep the POC synthetic-only and backup-free; add RDS/backups before real users.
 

@@ -95,6 +95,17 @@ personal data in this public repo; keep those in the local ops record/password m
   6.
 - First CI run is pending; the production close/recreate rehearsal remains.
 
+## 2026-11-26 — CI and CloudTrail verified
+
+- All first GitHub runs passed: CI, ARM64 build, deploy-app, deploy-web, terraform-plan and
+  terraform-apply. CI-built tag `v0.1.0-6a5d6a5` is deployed; web was rebuilt and invalidated.
+- GitHub OIDC now emits immutable owner/repo IDs in the `sub` claim. Updated the trust policy to
+  accept both that form and the legacy name-only form, then applied it.
+- CloudTrail organization logs are delivering for the tenant; latest delivery succeeded.
+- Terraform state serial: 7. Local dev is stopped; its worker now defaults to `dc-local`.
+- Close/recreate rehearsal and production gates (RDS/backups, auth, Secrets Manager, custom
+  domain/WAF) remain.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).

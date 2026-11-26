@@ -1,6 +1,6 @@
 # Tenant infrastructure and deployment plan
 
-Status: **Phase 3 live, CloudTrail enabled, CI workflows added 2026-11-26** · first CI run pending
+Status: **Phase 4 CI verified 2026-11-26** · app/web live, CloudTrail delivering; close/recreate rehearsal pending
 
 Goal: provision and update the Digital Companion resources inside a tenant AWS account from code,
 with one-command local bootstrap and repeatable GitHub build/deploy pipelines, while keeping a dated
@@ -378,7 +378,7 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 | 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | **plan generated: 47 to add, 0 to change/destroy; awaiting approval** |
 | 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | **done: app E2E 21/21; organization CloudTrail logging enabled** |
 | 3 | Web S3/CloudFront + full cloud E2E (text, voice, admin) | **web live: home/admin 200, routing/404 and CORS verified; backend E2E 21/21** |
-| 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | **workflows added; first CI run/deploy pending** |
+| 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | **verified: CI, build, app deploy, web deploy, plan and apply all green** |
 | 5 | Alarms/runbook/close-recreate rehearsal; document production gates (RDS/backups, Secrets Manager rotation, custom domain, HA) | alarms and close/recreate rehearsed; gates documented |
 
 ---
@@ -436,6 +436,6 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 - Add a custom domain/ACM, WAF, auth/consent/retention and HA before production.
 - Use a separate `digitalcompanion-prod` tenant and prod GitHub Environment with reviewers.
 
-Next: run the new GitHub plan/build/deploy workflows once, record the first CI deploy, then finish
-the close/recreate runbook rehearsal (Phase 5). The web, API, voice agent and Postgres are live;
-CloudTrail is logging; GitHub Environment variables are configured.
+Next: finish the close/recreate runbook rehearsal (Phase 5), then address the production gates
+(RDS/backups, auth/consent, Secrets Manager rotation, custom domain/WAF). The web, API, voice agent
+and Postgres are live; CloudTrail is delivering; all GitHub workflows are verified.

@@ -68,6 +68,16 @@ No account IDs, emails or secrets here.
 - Added the missing `ssm:DescribeInstanceInformation` permission to the deploy role and applied it.
 - Terraform state serial: 6. First CI workflow run is pending.
 
+## 2026-11-26 — CI verified
+
+- First GitHub runs: CI, ARM64 image build, app deploy, web deploy, Terraform plan and Terraform
+  apply all completed successfully. CI-built tag `v0.1.0-6a5d6a5` is deployed.
+- Fixed the GitHub OIDC trust after GitHub began emitting immutable owner/repo IDs in the `sub`
+  claim; both the immutable-ID and legacy subject forms are accepted.
+- CloudTrail is delivering organization logs for the tenant; latest delivery succeeded.
+- Terraform state serial: 7. No local dev stack is running (local `pnpm dev` now uses `dc-local`).
+- Close/recreate rehearsal and production gates remain.
+
 <!-- Template:
 ## YYYY-MM-DD — action
 Actor:
