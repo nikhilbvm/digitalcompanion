@@ -17,8 +17,7 @@ personal data in this public repo; keep those in the local ops record/password m
   IAM-user/access-key deny, and organization/CloudTrail protection.
 - Created the first tenant account `digitalcompanion-dev`, moved it under `tenants`, tagged it
   `project=digitalcompanion env=dev owner=nikhil`, and assigned `TenantAdmin` via Identity Center.
-- Created a **$25/month** cost budget with 50/80/100% ACTUAL alerts; SNS email subscription is
-  pending confirmation.
+- Created a **$25/month** cost budget with 50/80/100% ACTUAL alerts (initially via SNS).
 - Verified guardrails: a `us-west-2` EC2 call and `iam:CreateUser` are denied by explicit SCPs.
 - Confirmed the pre-existing `Project1` member account is **CLOSED/SUSPENDED** and was not reused.
 
@@ -30,12 +29,14 @@ personal data in this public repo; keep those in the local ops record/password m
 - Documented that account deletion is via AWS Organizations `close-account` (90-day recovery; use a
   new unique email to recreate) and that no one-command tenant script/API exists yet.
 - Confirmed the tenant is empty (no app resources, $0 spend) and the budget is active.
-- Pending: SNS email confirmation; internal tenant lifecycle scripts/vending control plane; tenant
-  baseline; cheap POC Terraform deployment.
+- Switched the budget to **direct EMAIL** subscribers at 50/80/100%; deleted the unused SNS topic.
+  No confirmation email is needed.
+- Pending: internal tenant lifecycle scripts/vending control plane; tenant baseline; cheap POC
+  Terraform deployment.
 
 ## Pending actions
 
-- [ ] Confirm the SNS budget-alert email subscription.
+- [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).
 - [ ] Build internal `create/close/recreate tenant` scripts and the vending control plane.
 - [ ] Add the tenant baseline (CloudTrail/roles/logging).
 - [ ] Deploy the cheap POC Terraform profile into the tenant.

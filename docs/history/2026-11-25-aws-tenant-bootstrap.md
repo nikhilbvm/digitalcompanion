@@ -11,8 +11,8 @@ Applied manually from the management account, using the `dc-admin` SSO profile:
   `project=digitalcompanion env=dev owner=nikhil`, assigned `TenantAdmin`, and created a
   $25/month cost budget with 50/80/100% alerts.
 - Verified guardrails: an out-of-region EC2 call and `iam:CreateUser` are explicitly denied.
-- SNS budget subscription is awaiting email confirmation.
+- Budget alerts were later switched to direct EMAIL subscribers; the SNS topic was deleted.
 
-Before this is production-ready: confirm SNS, add the internal create/close/recreate scripts and
+Before this is production-ready: add the internal create/close/recreate scripts and
 vending control plane, install the tenant baseline (logging/roles), deploy the POC profile, and only
 then consider public self-serve vending. See [../planning/03-aws-tenancy.md](../planning/03-aws-tenancy.md).

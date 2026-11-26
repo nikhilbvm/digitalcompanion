@@ -151,8 +151,8 @@ Tools installed on this machine: AWS CLI 2.34.64 and Terraform 1.17.2.
 
 **Applied 2026-11-25:** Identity Center + TenantAdmin SSO, local `dc-admin`/`dc-tenant-dev` profiles,
 `tenants` OU with four SCPs, first tenant account (tagged, SSO-assigned, $25 budget). Guardrails were
-tested with explicit denies for an out-of-region call and IAM user creation. SNS budget email
-confirmation is pending. Account IDs/emails are intentionally not stored in this public repo.
+tested with explicit denies for an out-of-region call and IAM user creation. The budget uses direct
+EMAIL alerts (no SNS confirmation). Account IDs/emails are intentionally not stored in this public repo.
 
 ## 6. Immediate bootstrap (console step, then SSO)
 
