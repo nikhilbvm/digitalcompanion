@@ -43,8 +43,7 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 *.tfplan
-**/tfplan
-**/tfplan.*
+**/tfplan*
 **/backend.hcl
 **/*.tfvars
 !**/*.tfvars.example

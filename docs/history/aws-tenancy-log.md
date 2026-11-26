@@ -52,6 +52,17 @@ personal data in this public repo; keep those in the local ops record/password m
   decision.
 - Pending: review/approve plan; Phase 2 apply; GitHub Environment; first app deploy.
 
+## 2026-11-26 — Phase 2 infrastructure applied
+
+- After explicit approval of the network/IAM scope, applied the stack. The first API CloudFront
+  create hit an AWS provider deferred-data-source bug; moved the managed cache/origin-request policy
+  lookups to the stack root, then applied the remaining API distribution and deploy policy.
+- Final post-apply `terraform plan`: no changes. Terraform state serial: 5.
+- Verified EC2 bootstrap through SSM: Docker, `/data` mount, 2 GB swap, CloudWatch agent and SSM
+  online. Security group allows only CloudFront to port 4000; both S3 buckets block public access.
+- API CloudFront is 504 and web is 403 until the first app/web deployment. CloudTrail, secrets and
+  containers remain pending.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).

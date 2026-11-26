@@ -23,14 +23,15 @@ Applied:
 - Guardrails tested: a `us-west-2` call and `iam:CreateUser` both fail with an explicit SCP deny.
 - Phase 1 Terraform state backend created in the tenant (versioned/encrypted S3 + DynamoDB lock);
   `backend.hcl` is local-only.
-- Terraform POC modules and the `digitalcompanion-dev` stack are written. `terraform plan` shows 47
-  resources to add; **no apply has run**.
+- Terraform POC modules and the `digitalcompanion-dev` stack are applied: 47 resources, post-apply
+  plan is empty. EC2 bootstrap is healthy (Docker, `/data`, swap, CloudWatch agent, SSM).
+- No application containers, secrets or web build are deployed yet.
 
 Next:
-- Review and approve the plan, then Phase 2 apply (EC2/ECR/CloudFront with Postgres on EBS).
+- Add the tenant baseline (CloudTrail), push secrets, build/push arm64 images and deploy the first
+  API/agent/Postgres stack.
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
-- Add the tenant baseline (CloudTrail) and first app deploy with the
-  [tenant infrastructure plan](../../docs/planning/04-tenant-infrastructure.md).
+- Deploy the static web build ([tenant infrastructure plan](../../docs/planning/04-tenant-infrastructure.md)).
 
 No account IDs, root credentials, personal emails or secrets live in this public repo.
 

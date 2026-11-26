@@ -5,8 +5,8 @@ S3/CloudFront web, SSM secrets, per-tenant state and audit. See
 [docs/planning/04-tenant-infrastructure.md](../../docs/planning/04-tenant-infrastructure.md) and the
 tenant stack at [stacks/digitalcompanion-dev](stacks/digitalcompanion-dev/README.md).
 
-Phase 1 status: the state backend exists and `terraform plan` reports **47 resources to add**; no
-`apply` has been run.
+Phase 2 status: the state backend and **47 tenant resources are applied**; the post-apply plan is
+empty. Application containers, secrets and the web build are not deployed yet.
 
 The module layout below is the **production** shape (ECS/RDS/ALB), kept for the later migration. Do
 not treat it as the first implementation.

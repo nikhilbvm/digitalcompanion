@@ -1,6 +1,6 @@
 # Tenant infrastructure and deployment plan
 
-Status: **Phase 1 implemented 2026-11-26** · Terraform plan generated (47 resources); no apply
+Status: **Phase 2 infrastructure applied 2026-11-26** · 47 resources; app containers/secrets not deployed
 
 Goal: provision and update the Digital Companion resources inside a tenant AWS account from code,
 with one-command local bootstrap and repeatable GitHub build/deploy pipelines, while keeping a dated
@@ -375,7 +375,7 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 |---|---|---|
 | 0 | Approve this plan; choose TLS/domain, registry, secrets, database, compute, backups, CI roles, audit and deploy trigger | **done 2026-11-26** |
 | 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | **plan generated: 47 to add, 0 to change/destroy; awaiting approval** |
-| 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | API `/health` OK through CloudFront |
+| 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | **infra applied; CloudTrail, secrets and first deploy pending** |
 | 3 | Web S3/CloudFront + full cloud E2E (text, voice, admin) | E2E passes against the tenant |
 | 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | deploy via GitHub, audit entries |
 | 5 | Alarms/runbook/close-recreate rehearsal; document production gates (RDS/backups, Secrets Manager rotation, custom domain, HA) | alarms and close/recreate rehearsed; gates documented |
@@ -435,5 +435,6 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 - Add a custom domain/ACM, WAF, auth/consent/retention and HA before production.
 - Use a separate `digitalcompanion-prod` tenant and prod GitHub Environment with reviewers.
 
-Next: Phase 1 — backend bootstrap + Terraform modules + `digitalcompanion-dev` stack, ending in a
-reviewed `terraform plan`. No apply until that plan is reviewed.
+Next: finish Phase 2 — enable the CloudTrail tenant baseline, push secrets, build/push the arm64
+images, deploy API/agent/Postgres through SSM, and verify `/health` through CloudFront. Then Phase 3
+deploys the static web build.
