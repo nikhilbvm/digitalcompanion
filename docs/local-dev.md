@@ -146,7 +146,8 @@ curl -s http://localhost:4000/health | jq
 2. Create a person: full name, preferred name, interests (comma separated), topics to avoid, care
    notes.
 3. Open <http://localhost:3000>.
-4. Pick the person, then **Talk now** or **Chat now**.
+4. Open the menu → Settings, choose the person, and optionally enable **Show chat**.
+5. Tap the phone button to call, or send a typed message if chat is enabled.
 
 ### Text smoke test
 

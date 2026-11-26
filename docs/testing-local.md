@@ -40,7 +40,7 @@ pnpm e2e
 The script creates a temporary person and checks:
 
 1. `/health` reports LLM, database, Deepgram and LiveKit configured.
-2. Web `/` responds and contains **Talk now** / **Chat now**.
+2. Web `/` responds and contains the **Digital Companion** shell and **Admin** link.
 3. Benign text chat streams a reply with no flags.
 4. A card-number message raises an input scam flag, an output flag, masks the card in the database,
    and never repeats the digits.
@@ -64,17 +64,17 @@ Open `http://localhost:3000`.
 
 ### Admin / setup
 
-- [ ] `/admin` loads with the local-POC warning.
+- [ ] `/admin` loads without a disclaimer banner.
 - [ ] Create a person with a preferred name, interests and a topic to avoid.
-- [ ] The person appears in the picker on `/`.
+- [ ] The person appears in the settings drawer on `/`.
 
 ### Text chat
 
-- [ ] Pick the person → **Chat now**.
-- [ ] The reply streams in large type.
-- [ ] **Read aloud** speaks the assistant reply.
-- [ ] Dictation fills the textarea (browser support varies).
-- [ ] **End** closes the conversation; it shows `ended` in admin.
+- [ ] Menu → Settings → choose the person → enable **Show chat** → Save.
+- [ ] The settings choice persists after a reload.
+- [ ] Type a message; the reply streams into the chat area.
+- [ ] The chat area auto-scrolls to the newest message.
+- [ ] The bottom call button is enabled; it is disabled while connecting or with no person.
 
 ### Text safety cases
 
@@ -86,13 +86,14 @@ Open `http://localhost:3000`.
 
 ### Voice
 
-- [ ] Pick the person → **Talk now**; allow the microphone.
-- [ ] Status moves through connecting → listening.
+- [ ] Tap the bottom **Call** button; allow the microphone.
+- [ ] The button disables while connecting, then becomes red **End call**.
+- [ ] The orb/rings animate while listening and the waveform animates while the companion speaks.
 - [ ] Companion greets the person by preferred name.
-- [ ] Live transcript shows “You” and “Companion” lines.
+- [ ] With **Show chat** enabled, the live transcript shows “You” and “Companion” lines.
 - [ ] Speaking interrupts the companion (barge-in).
 - [ ] The 5-minute conversation works without a crash.
-- [ ] **End** disconnects and marks the conversation ended in admin.
+- [ ] **End call** disconnects and marks the conversation ended in admin.
 - [ ] Say “I fell and can't get up” → 911 guidance and an emergency flag.
 
 ### Admin review
@@ -104,10 +105,12 @@ Open `http://localhost:3000`.
 
 ### Accessibility
 
-- [ ] Body text is comfortably large (≥ 24px) and high contrast.
-- [ ] Buttons are large and keyboard-focusable.
+- [ ] Body text is comfortably large and high contrast.
+- [ ] The call target is large and keyboard-focusable; the drawer and forms are usable at 390px.
 - [ ] The page has no horizontal scroll at phone width.
-- [ ] Screen reader announces status and transcript changes (`aria-live`).
+- [ ] Screen reader announces status, toast and transcript changes (`aria-live`).
+- [ ] The 2-second splash appears on the companion page but not admin.
+- [ ] No emergency/disclaimer footer is rendered (per product request); admin still shows safety flags.
 
 ---
 
@@ -130,7 +133,7 @@ Confirm no card/SSN/OTP digits are in `messages.text` or `guardrail_flags.detail
 |---|---|
 | `pnpm verify` | lint, types, 66 unit tests, builds, tracked-file secret scan |
 | `pnpm e2e` | API ↔ Postgres, OpenRouter text/classifier, guardrails, masking, LiveKit token dispatch, worker job, OpenRouter greeting, Deepgram key, web pages |
-| Browser checklist | microphone, audio quality, barge-in, live transcript, dictation, read-aloud, large-type UX |
+| Browser checklist | microphone, audio quality, barge-in, live transcript, speaker animation, settings persistence, large-type mobile UX |
 | CI | the same verify step plus a real Postgres schema/store test, Docker image builds/smoke tests |
 
 There is still no automated browser/mic test; that is deliberate until a browser test harness is

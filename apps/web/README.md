@@ -1,7 +1,8 @@
 # @companion/web
 
-Next.js App Router + Tailwind. One large-type screen for the older adult and a minimal `/admin` page.
-Client-side only for product features; no API keys and no database access.
+Next.js App Router + Tailwind. One mobile-first companion screen (splash, animated call state,
+optional chat, right-side settings drawer) and a matching `/admin` shell. Client-side only; no API
+keys and no database access.
 
 ## Commands
 
@@ -26,25 +27,27 @@ Only `NEXT_PUBLIC_*` values are exposed to the browser. Never put the service ro
 
 ## Screens
 
-- `/` — person picker, **Talk now**, **Chat now**, End, live voice transcript, streamed text chat,
-  dictation, read-aloud, 911/988 footer.
-- `/admin` — create a person, list people/conversations, view messages and guardrail flags. Local POC;
-  no auth.
+- `/` — 2-second splash, animated companion orb, phone call button, optional chat/live transcript,
+  right-side settings drawer (person + “Show chat”).
+- `/admin` — right-side section menu for People, Conversations and New person; editable person
+  profiles; conversation and guardrail review. Local POC; no auth.
 
 ## Structure
 
 ```
 src/app/page.tsx              companion screen (client)
 src/app/admin/page.tsx        admin (client)
-src/components/               BigButton, PersonPicker, VoicePanel, ChatPanel
+src/components/               SplashScreen, Drawer, Toast, CompanionOrb, ChatPane,
+                              CallDock, PersonForm, Icons
 src/lib/api.ts                fetch + SSE parser
-src/lib/livekit.ts            VoiceSession (room, transcript, state)
+src/lib/livekit.ts            VoiceSession (room, transcript, speaker state)
+src/lib/preferences.ts        localStorage person/show-chat preferences
 ```
 
 ## Accessibility
 
-Body type ≥ 24px (`text-2xl`), high contrast, 64px+ targets, visible focus rings, no menus, reduced
-motion respected, `aria-live` transcript. See [docs/main.md](docs/main.md).
+Large text (root 18px), high contrast, 44–72px targets, visible focus rings, keyboard/Escape drawer,
+reduced motion respected, `aria-live` transcript. See [docs/main.md](docs/main.md).
 
 Docs: [docs/main.md](docs/main.md) · [docs/voice-ui.md](docs/voice-ui.md) · Agent file:
 [CLAUDE.md](CLAUDE.md)

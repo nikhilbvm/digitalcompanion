@@ -1,10 +1,18 @@
 # Web — design notes
 
-## Why one screen
+## Product shell
 
-The primary user is an older adult who may be anxious about technology. The home screen has a person
-picker and two enormous actions. There are no menus, settings or navigation. Admin lives at a separate
-URL and is for the family.
+The companion is a mobile-first, single-screen application:
+
+- **Splash** — a 2-second circular “Digital Companion” splash on the companion page only.
+- **Top bar** — small brand, Admin link, menu button.
+- **Right drawer** — Settings for the companion; section navigation in admin.
+- **Companion stage** — animated orb, call state, and optional chat/transcript.
+- **Bottom call dock** — one large phone button that switches between Call and End call and disables
+  itself while connecting or before a person is selected.
+- **Settings** — choose who is using the companion, toggle “Show chat”, Save. Preferences persist in
+  `localStorage`; chat defaults to off.
+- No emergency/disclaimer footer is shown, by product request. Safety flags remain visible in admin.
 
 ## Screens and state
 
@@ -12,44 +20,45 @@ URL and is for the family.
 
 | State | UI |
 |---|---|
-| home | person picker + Talk now + Chat now |
-| voice | `VoicePanel`: status (`requesting-mic`, `connecting`, `listening`, `speaking`, `ended`, `error`), live transcript, End |
-| chat | `ChatPanel`: streamed messages, large textarea, Send, Speak instead (dictation), Read aloud, End |
+| idle, chat off | large animated orb + status + call dock |
+| idle, chat on | compact orb + chat messages + text input + call dock |
+| connecting | compact/large orb with connecting animation; call dock disabled |
+| voice | live transcript if chat is on; otherwise the orb; End call is enabled |
+| chat | streamed text messages, small message composer, auto-scroll |
 
-Shared state: `people`, `personId`, `conversationId`, `messages`, `transcript`, `error`, `lastFlag`.
-Changing the person resets the conversation.
+Shared state: `people`, `personId`, `showChat`, `conversationId`, `messages`, `transcript`,
+`voiceStatus`, `speaker`, `toast`. Settings changes persist `personId`/`showChat` and reset the
+current conversation.
 
-`/admin` (`src/app/admin/page.tsx`): create person form, people list, conversations list, conversation
-detail with messages and flags. No auth, clearly labeled.
+`/admin` (`src/app/admin/page.tsx`): right-drawer menu with **People**, **Conversations** and
+**New person**. People can be selected and edited (name, preferred name, interests, avoid topics,
+care notes) through `PUT /people/:id`; conversations and guardrail flags remain reviewable.
+No login; do not expose the admin page.
 
-## API client
+## Components
 
-`src/lib/api.ts` wraps fetch, validates errors, and parses the SSE frames from `POST /chat`. It never
-uses `EventSource` (POST) and never logs message text.
-
-`src/lib/livekit.ts`:
-
-1. prompts for mic permission with `getUserMedia` and stops the temporary tracks,
-2. fetches a token from the API,
-3. registers `room.registerTextStreamHandler('lk.transcription', …)` **before** connecting,
-4. maps `ActiveSpeakersChanged` → "Listening…" / "Your companion is speaking…",
-5. on `Disconnected`/agent leave → ended,
-6. `end()` calls the conversation end endpoint and disconnects.
-
-Transcript segments: keyed by `lk.segment_id`; final replaces interim (`lk.transcription_final`).
-User transcripts carry `lk.transcribed_track_id`; agent output does not, which determines the speaker
-label.
+| Concern | Location |
+|---|---|
+| Companion screen/state | `src/app/page.tsx` |
+| Settings drawer + call dock | `src/app/page.tsx`, `CallDock.tsx` |
+| Chat + live transcript + auto-scroll | `ChatPane.tsx` |
+| Animated orb | `CompanionOrb.tsx` |
+| Menu/drawer/toast/splash | `Drawer.tsx`, `Toast.tsx`, `SplashScreen.tsx` |
+| Person create/edit form | `PersonForm.tsx` |
+| SSE parsing | `src/lib/api.ts` |
+| LiveKit room/transcript/speaker state | `src/lib/livekit.ts` |
+| Preferences | `src/lib/preferences.ts` |
 
 ## Accessibility contract
 
-- Body ≥ 24px (`text-2xl` on a 18px root = 27px); buttons `text-3xl`/`text-4xl`.
-- High contrast: dark slate text on warm off-white; teal/amber actions with white text.
-- Minimum target 64px high; generous spacing.
-- Visible focus rings (`focus-visible:ring-4`).
-- `aria-live="polite"` on transcript/status/chat; `role="alert"` on errors.
-- Reduced motion respected in `globals.css`.
-- No color-only meaning; labels are text.
-- The footer states 911/988 and the local-POC limitation.
+- Root font is 18px; companion bubbles are ~20px and controls are at least 44–52px high, with the
+  call target at 72px.
+- High contrast dark slate on warm off-white; focus rings on interactive controls.
+- Drawer is a labelled modal dialog with Escape/close support; toasts use `role=alert/status`.
+- Chat/transcript regions use `aria-live="polite"` and auto-scroll.
+- Reduced motion is respected via `globals.css`; the splash still provides enough time for the page
+  to settle.
+- No color-only state: call/status labels accompany color changes.
 
 ## Hosting
 
@@ -60,9 +69,9 @@ local development; `pnpm build && pnpm start` previews the static output.
 
 ## Deliberate limitations
 
-- No login, no multi-family accounts; admin is open locally.
-- Read-aloud uses the browser's `speechSynthesis`; voice quality varies.
-- Dictation uses Web Speech API if present; hidden when unavailable.
-- Transcript display depends on LiveKit text streams; older clients may not receive them.
-- No session resume after refresh (POC).
+- No login, no multi-family accounts; admin is open in the POC.
+- Text chat and voice share one screen but do not run simultaneously; starting a call closes an
+  active text conversation.
+- No session resume after a full refresh beyond saved person/chat preferences.
+- Transcript display depends on LiveKit text streams.
 - Part 2 adds authentication, Capacitor packaging and an accessibility review with older adults.

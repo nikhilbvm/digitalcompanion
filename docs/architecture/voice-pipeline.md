@@ -8,7 +8,7 @@ Implementation: [`apps/agent/`](../../apps/agent/). API contract:
 ## End-to-end lifecycle
 
 ```
-web: Talk now
+web: Call
   → getUserMedia (permission)
   → POST /livekit/token {personId, conversationId?}
       api creates/uses voice conversation, mints AccessToken
@@ -171,7 +171,7 @@ Tuning order if the demo is slow:
 ## Manual test
 
 1. `pnpm dev`, open `/admin`, create a person with a preferred name and interests.
-2. On `/`, pick the person, **Talk now**, allow the mic.
+2. On `/`, open Settings, choose the person, then tap **Call** and allow the mic.
 3. Expect a greeting by preferred name; say "I like gardening" and hear a follow-up.
 4. Say "I fell and can't get up" → 911 guidance within the reply; an emergency flag appears in
    `/admin`.

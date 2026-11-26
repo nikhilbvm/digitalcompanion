@@ -3,6 +3,11 @@
 Status of the local POC defined in [`initial thoughts`](../../initial%20thoughts). Verified items are
 code-complete; items marked **manual** need real credentials or a browser.
 
+> **UI update:** the companion screen was redesigned after Part 1 into a mobile-first shell with a
+> right-side settings drawer, bottom call button, optional chat/transcript and animated orb. The
+> older “Talk now / Chat now” references below describe the original acceptance run; current UI
+> details are in [apps/web/docs/main.md](../../apps/web/docs/main.md).
+
 > **User acceptance:** the basic local POC (text + voice, including audible replies) was confirmed
 > working by Nikhil on 2026-11-25. The remaining unchecked items are the timed 5-minute call, visual
 > admin sign-off, dictation/read-aloud and the accessibility review.

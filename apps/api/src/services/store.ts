@@ -70,6 +70,30 @@ export class Store {
     return mapPerson(row);
   }
 
+  async updatePerson(personId: string, input: NewPerson): Promise<Person> {
+    const { rows } = await this.db.query<PersonRow>(
+      `update people
+          set name = $2,
+              preferred_name = $3,
+              interests = $4,
+              avoid_topics = $5,
+              care_notes = $6
+        where id = $1
+        returning *`,
+      [
+        personId,
+        input.name,
+        input.preferredName,
+        input.interests,
+        input.avoidTopics,
+        input.careNotes ?? null,
+      ],
+    );
+    const row = rows[0];
+    if (!row) throw new NotFoundError('Person not found');
+    return mapPerson(row);
+  }
+
   // -------------------------------------------------------------------------
   // Conversations
   // -------------------------------------------------------------------------

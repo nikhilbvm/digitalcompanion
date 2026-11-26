@@ -6,7 +6,7 @@ the database or the LLM; it talks to the API and to LiveKit Cloud.
 ```
 ┌──────────────────────────── Browser ────────────────────────────┐
 │ apps/web (Next.js, client components, Capacitor-ready)          │
-│  person picker · Talk now · Chat now · End · live transcript    │
+│  splash · settings drawer · call button · optional chat/transcript│
 │  livekit-client                          fetch + SSE            │
 └──────────────┬──────────────────────────────────┬───────────────┘
                │ LiveKit Cloud media              │ HTTPS
@@ -15,7 +15,7 @@ the database or the LLM; it talks to the API and to LiveKit Cloud.
 │ apps/agent                   │      │ apps/api (Express 5)         │
 │  LiveKit worker              │      │  POST /chat (SSE)            │
 │  Deepgram Nova-3 STT         │      │  POST /livekit/token         │
-│  CompanionOpenRouterLLM      │      │  GET/POST /people            │
+│  CompanionOpenRouterLLM      │      │  GET/POST/PUT /people        │
 │  Deepgram Aura-2 TTS         │      │  GET /conversations[/:id]    │
 │  Silero VAD + turn detector  │      │  POST /conversations/:id/end │
 │  guardrails + recorder       │      │  guardrails + persistence    │

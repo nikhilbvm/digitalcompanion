@@ -27,6 +27,13 @@ POST /people
  "avoidTopics":["politics"],"careNotes":"optional"}
 201 {"person":{…}}
 400 bad_request (Zod issues)
+
+PUT /people/:id
+{"name":"Mary Example","preferredName":"Mary","interests":["gardening"],
+ "avoidTopics":["politics"],"careNotes":"optional"}
+200 {"person":{…}}
+400 bad_request (Zod issues)
+404 not_found
 ```
 
 ## Conversations

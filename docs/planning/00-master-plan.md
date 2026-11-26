@@ -4,13 +4,20 @@ Status: **approved for execution** · Date: 2026-11-25 · Owner: Nikhil
 Source brief: [`initial thoughts`](../../initial%20thoughts)
 Reference project for repo/agent/DevOps conventions: `kjsiteprovisioning2` (unrelated business, same monorepo operating model)
 
+> **UI update (2026-11-26):** the frontend was redesigned after the original Part 1 UI into a
+> mobile-first shell with a right-side settings drawer, bottom call button, optional chat/transcript,
+> animated orb and matching admin drawer. References below to “Talk now / Chat now / no menus /
+> read-aloud” describe the original plan; current UI details are in
+> [apps/web/docs/main.md](../../apps/web/docs/main.md).
+
 ---
 
 ## 1. Product summary
 
 Digital Companion is a voice-and-text AI companion for older adults in the US. A person opens a
-deliberately simple web app and chooses **Talk now** (real-time voice) or **Chat now** (large-type
-text). Every turn passes through a light input guardrail, Claude, and a light output guardrail.
+deliberately simple web app, taps the call button for real-time voice, and can optionally show a
+large-type chat/transcript area from Settings. Every turn passes through a light input guardrail,
+Claude, and a light output guardrail.
 Conversations, guardrail flags and (from Part 2) memories are stored in Postgres (local or RDS) so family/admin
 users can review them.
 

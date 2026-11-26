@@ -1,11 +1,12 @@
 # Voice UI
 
-Implementation: `src/lib/livekit.ts`, `src/components/VoicePanel.tsx`.
+Implementation: `src/lib/livekit.ts`, `src/components/CompanionOrb.tsx`,
+`src/components/CallDock.tsx`, `src/components/ChatPane.tsx`.
 
 ## Connection sequence
 
 ```
-Talk now
+Call
   → getUserMedia({audio:true}) permission; stop temporary tracks
   → POST /livekit/token {personId, conversationId?}
   → new Room()
@@ -17,7 +18,17 @@ Talk now
 ```
 
 Registering the handler before `connect` matters: the agent may greet immediately after joining, and
-early transcription streams would otherwise be missed.
+early transcription streams would otherwise be missed. Starting a voice call ends any active text
+conversation first.
+
+## Orb and call dock
+
+- `CompanionOrb` receives `VoiceStatus` and `VoiceSpeaker`.
+- `ActiveSpeakersChanged` maps a remote speaker to `companion` and a local speaker to `user`.
+- The orb breathes while idle/listening, pulses rings while the user speaks, and shows animated bars
+  while the companion speaks.
+- `CallDock` is the only call control: green **Call**, disabled **Connecting…**, or red **End call**.
+  It is disabled when no person is selected or while the microphone/room is connecting.
 
 ## Transcript handling
 
@@ -36,27 +47,28 @@ room.registerTextStreamHandler('lk.transcription', async (reader) => {
 - Interim and final streams share `lk.segment_id`; the final replaces the interim.
 - User speech has `lk.transcribed_track_id`; agent speech does not.
 - If a stream read fails mid-way (sender abort/reconnect), ignore that segment.
+- `ChatPane` auto-scrolls the transcript area when chat is enabled.
 
 ## Status mapping
 
-| Active speakers | Status |
-|---|---|
-| remote participant | speaking |
-| local participant only | listening |
-| none | listening |
+| Active speakers | Status | Animation |
+|---|---|---|
+| remote participant | speaking | companion waveform |
+| local participant only | listening | user rings |
+| none | listening | breathing orb |
 
-`End` calls `endConversation(conversationId)` then disconnects. The agent also sets `ended_at` on close;
-the endpoint is idempotent.
+When chat is disabled, the orb is the only stage content. When enabled, a compact orb sits above the
+transcript/chat area so the speaking animation remains visible.
 
 ## Failure handling
 
 | Failure | UI |
 |---|---|
-| Mic denied | status error + "allow microphone access" message |
-| Token/API error | status error + API message |
-| Room connect error | status error + message; cleanup attempted |
-| Agent leaves/disconnects | status ended |
-| No transcript | status still reflects speech; check agent output transcription |
+| Mic denied | toast + error status; call can be retried |
+| Token/API error | toast + error status |
+| Room connect error | toast; cleanup attempted |
+| Agent leaves/disconnects | status ended, call returns to idle |
+| No transcript | status still reflects speech |
 
 ## Privacy
 

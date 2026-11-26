@@ -12,6 +12,8 @@ export type VoiceStatus =
   | 'ended'
   | 'error';
 
+export type VoiceSpeaker = 'user' | 'companion' | null;
+
 export interface TranscriptLine {
   id: string;
   speaker: 'you' | 'companion';
@@ -21,6 +23,7 @@ export interface TranscriptLine {
 
 export interface VoiceSessionHandlers {
   onStatus: (status: VoiceStatus) => void;
+  onSpeaker?: (speaker: VoiceSpeaker) => void;
   onTranscript: (lines: TranscriptLine[]) => void;
   onConversationId: (conversationId: string) => void;
   onError: (message: string) => void;
@@ -50,6 +53,7 @@ export class VoiceSession {
     this.lines.clear();
     this.handlers = handlers;
     handlers.onTranscript([]);
+    handlers.onSpeaker?.(null);
     handlers.onAudioBlocked?.(false);
     handlers.onStatus('requesting-mic');
 
@@ -100,9 +104,16 @@ export class VoiceSession {
         const localIdentity = room.localParticipant.identity;
         const localSpeaking = speakers.some((p) => p.identity === localIdentity);
         const remoteSpeaking = speakers.some((p) => p.identity !== localIdentity);
-        if (remoteSpeaking) handlers.onStatus('speaking');
-        else if (localSpeaking) handlers.onStatus('listening');
-        else handlers.onStatus('listening');
+        if (remoteSpeaking) {
+          handlers.onStatus('speaking');
+          handlers.onSpeaker?.('companion');
+        } else if (localSpeaking) {
+          handlers.onStatus('listening');
+          handlers.onSpeaker?.('user');
+        } else {
+          handlers.onStatus('listening');
+          handlers.onSpeaker?.(null);
+        }
       });
 
       room.on(RoomEvent.TrackSubscribed, (track) => {
@@ -127,11 +138,13 @@ export class VoiceSession {
       });
 
       room.on(RoomEvent.Disconnected, () => {
+        handlers.onSpeaker?.(null);
         handlers.onStatus('ended');
       });
 
       room.on(RoomEvent.ParticipantDisconnected, (participant) => {
         if (participant.identity !== room.localParticipant.identity) {
+          handlers.onSpeaker?.(null);
           handlers.onStatus('ended');
         }
       });
@@ -147,8 +160,10 @@ export class VoiceSession {
         handlers.onAudioBlocked?.(true);
       }
       handlers.onAudioBlocked?.(!room.canPlaybackAudio);
+      handlers.onSpeaker?.(null);
       handlers.onStatus('listening');
     } catch (error) {
+      handlers.onSpeaker?.(null);
       handlers.onStatus('error');
       handlers.onError(
         error instanceof Error

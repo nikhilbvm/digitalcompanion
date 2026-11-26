@@ -12,7 +12,9 @@
   self-harm patterns; Haiku classifier; output filter; 63 tests.
 - Postgres schema (local Docker or Amazon RDS): people, conversations, messages, guardrail flags,
   memory notes; RLS enabled as defense in depth.
-- Large-type companion screen and minimal local admin.
+- Mobile-first companion shell: 2-second splash, right-side settings drawer, saved person/chat
+  preferences, animated call orb, bottom call/end button, optional chat/transcript with auto-scroll.
+- Matching admin drawer with section navigation and editable person profiles (`PUT /people/:id`).
 - Documentation system, per-subproject docs and CLAUDE files, AGENTS manual, decision log.
 - Local end-to-end harness (`pnpm e2e`) covering text chat, guardrails, masking, Postgres, LiveKit
   dispatch, voice greeting and web pages.

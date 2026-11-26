@@ -4,6 +4,24 @@ Newest first. See [README](README.md) for the format.
 
 ---
 
+## 2026-11-26 — Mobile-first companion shell with settings and animated call state
+
+**Decision:** Replace the original one-screen “Talk now / Chat now” layout with a mobile-first shell:
+2-second splash on the companion page, right-side menu/settings drawer, saved person and “Show chat”
+preferences, one bottom call/end button, optional chat/transcript with auto-scroll, animated speaking
+orb, matching admin drawer, and persisted person edits through `PUT /people/:id`. The emergency/POC
+footer and admin disclaimer banner are removed from the UI at the user’s request.
+
+**Context:** The user wanted a minimal interface suitable for a phone/PWA, optional rather than
+always-visible chat, a clear call state, and a small admin editor for person interests and notes.
+Chat defaults off to keep the first screen quiet; the setting is stored locally per browser.
+
+**Consequences:** Local storage now holds the selected person and chat visibility; a new backend
+endpoint and store method are required for admin edits. The visible safety disclaimer is gone from
+the POC UI, so deployment docs and the admin review remain the safety record; do not use real family
+data until authentication/consent are added. Current UI details are in
+[apps/web/docs/main.md](../../apps/web/docs/main.md).
+
 ## 2026-11-25 — Initial cloud POC uses one EC2; production stays managed AWS
 
 **Decision:** The first cloud E2E runs on one EC2 `t4g.small` with Docker Compose (API, LiveKit agent,

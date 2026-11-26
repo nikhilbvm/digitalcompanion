@@ -135,7 +135,10 @@ async function main(): Promise<void> {
   check(Boolean(webHome?.ok), 'web home responds');
   if (webHome?.ok) {
     const html = await webHome.text();
-    check(html.includes('Talk now') && html.includes('Chat now'), 'web shows Talk/Chat');
+    check(
+      html.includes('Digital Companion') && html.includes('Admin'),
+      'web shows companion shell',
+    );
   }
 
   const pool = createDbPool();

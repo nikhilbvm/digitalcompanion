@@ -44,6 +44,14 @@ export async function createPerson(input: NewPerson): Promise<Person> {
   return person;
 }
 
+export async function updatePerson(personId: string, input: NewPerson): Promise<Person> {
+  const { person } = await request<{ person: Person }>(`/people/${personId}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+  return person;
+}
+
 export async function getConversations(personId?: string): Promise<Conversation[]> {
   const query = personId ? `?personId=${encodeURIComponent(personId)}` : '';
   const { conversations } = await request<{ conversations: Conversation[] }>(

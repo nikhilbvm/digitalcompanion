@@ -1,8 +1,8 @@
 # Digital Companion
 
-A voice-and-text AI companion for older adults in the US. One large-type screen, two choices —
-**Talk now** or **Chat now** — with light safety guardrails on every turn, persistent transcripts,
-and a small admin view for a family administrator.
+A voice-and-text AI companion for older adults in the US. One mobile-first screen with a large call
+button, an optional chat/transcript area, and a right-side settings drawer — with light safety
+guardrails on every turn, persistent transcripts, and a small admin view for a family administrator.
 
 This repository is a monorepo containing the web app, API, LiveKit voice agent, shared core package,
 database migrations, DevOps/CI, documentation, and the agent operating system used to develop it.
@@ -19,11 +19,12 @@ database migrations, DevOps/CI, documentation, and the agent operating system us
 
 ## What it does
 
-- **Talk now** — the person taps once, grants the microphone, and has a real-time voice conversation.
-  Deepgram Nova-3 transcribes, Claude Haiku 5.5 replies, Deepgram Aura-2 speaks, LiveKit Cloud carries
-  the media. Interruptions are supported.
-- **Chat now** — the same companion in large text, with streaming replies, browser dictation, and a
-  read-aloud button.
+- **Call** — the bottom phone button asks for the microphone and starts a real-time voice
+  conversation. Deepgram Nova-3 transcribes, Claude Haiku 5.5 replies, Deepgram Aura-2 speaks, and
+  LiveKit Cloud carries the media. Interruptions are supported.
+- **Optional chat** — Settings can show a text/transcript area. Typed messages stream replies; during
+  a call the same area shows the live transcript with auto-scroll. Chat is off by default.
+- **Settings** — choose who is using the companion and persist that choice plus “Show chat” locally.
 - **Every turn** passes through deterministic input checks plus a small Haiku classifier, then an
   output filter on each sentence before it is spoken or shown.
 - **Conversations, messages and guardrail flags** are stored in Postgres (local Docker or Amazon RDS) and visible in `/admin`.
@@ -43,7 +44,7 @@ See [docs/architecture/guardrails.md](docs/architecture/guardrails.md).
 | [`apps/agent/`](apps/agent/) | LiveKit Agents JS voice worker (Deepgram + Claude) | [README](apps/agent/README.md) · [docs](apps/agent/docs/main.md) · [CLAUDE](apps/agent/CLAUDE.md) |
 | [`packages/core/`](packages/core/) | Persona, guardrails, shared types, Postgres/memory helpers | [README](packages/core/README.md) · [docs](packages/core/docs/main.md) · [CLAUDE](packages/core/CLAUDE.md) |
 | [`db/`](db/) | SQL migrations, seed data and RDS/local setup | [README](db/README.md) |
-| [`devops/`](devops/) | CI/CD strategy, environment contracts, Part 2 Terraform placeholder | [README](devops/README.md) · [docs](docs/devops.md) |
+| [`devops/`](devops/) | Tenant Terraform, deploy scripts, CI/CD and environment contracts | [README](devops/README.md) · [docs](docs/devops.md) |
 | [`.github/`](.github/) | CI, Docker publishing, PR/issue templates, Copilot instructions | [workflows](.github/workflows/) |
 | [`docs/`](docs/) | Architecture, planning, local dev, agent workflows, history | [index](docs/main.md) |
 | [`initial thoughts`](initial%20thoughts) | Original product brief (source of truth) | — |
@@ -81,8 +82,9 @@ pnpm dev
 # agent → LiveKit worker (exits early if keys are missing)
 ```
 
-Create a person at [http://localhost:3000/admin](http://localhost:3000/admin), pick them on the main
-screen, and choose **Talk now** or **Chat now**.
+Create a person at [http://localhost:3000/admin](http://localhost:3000/admin), then choose them in
+Settings on the main screen. Use the phone button to call; enable **Show chat** if you want typed
+chat or the live transcript.
 
 Full setup, account creation and troubleshooting: [docs/local-dev.md](docs/local-dev.md).
 Short run guide: [RUN-LOCAL.md](RUN-LOCAL.md).
