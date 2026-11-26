@@ -12,7 +12,7 @@ and GitHub Environment variables.
 | Terraform stack | `devops/terraform/stacks/digitalcompanion-dev` |
 | State key | `digitalcompanion/digitalcompanion-dev/terraform.tfstate` |
 | Budget | $25/month, 50/80/100% direct email alerts |
-| Status | Web/API/agent/Postgres live; CloudTrail delivering; CI plan/build/deploy verified |
+| Status | Redesigned web/API/agent/Postgres live; CloudTrail delivering; CI verified |
 
 ## Links
 

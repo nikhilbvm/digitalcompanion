@@ -106,6 +106,15 @@ personal data in this public repo; keep those in the local ops record/password m
 - Close/recreate rehearsal and production gates (RDS/backups, auth, Secrets Manager, custom
   domain/WAF) remain.
 
+## 2026-11-26 — redesigned UI deployed
+
+- CI built API/agent images for commit `604d197`; deployed tag `v0.1.0-604d197` and rebuilt the
+  web S3/CloudFront distribution.
+- Cloud browser checks passed for the new shell, settings, chat toggle, admin People view and
+  Call/End call state (fake microphone); no console errors. `PUT /people/:id` returned 200 with
+  unchanged data.
+- No infrastructure changes; Terraform state serial remains 7. The local dev stack was stopped.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).

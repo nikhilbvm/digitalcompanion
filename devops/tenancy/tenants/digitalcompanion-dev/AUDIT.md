@@ -78,6 +78,17 @@ No account IDs, emails or secrets here.
 - Terraform state serial: 7. No local dev stack is running (local `pnpm dev` now uses `dc-local`).
 - Close/recreate rehearsal and production gates remain.
 
+## 2026-11-26 — redesigned UI deployed
+
+- CI built images for commit `604d197`; `deploy-app` deployed tag `v0.1.0-604d197` and `deploy-web`
+  rebuilt the S3/CloudFront web.
+- Cloud browser verification passed: new shell, settings, chat toggle and admin People view; no
+  console errors.
+- Cloud call test with a fake microphone transitioned Call → End call and back to Call; no error toast.
+- `PUT /people/:id` returned 200 against the tenant using unchanged data.
+- No Terraform changes; state serial remains 7. Local dev stack was stopped after verification.
+- Close/recreate rehearsal and production hardening remain.
+
 <!-- Template:
 ## YYYY-MM-DD — action
 Actor:
