@@ -8,6 +8,23 @@ Keep them in the local ops record / password manager.
 
 ---
 
+## 0. Terminology
+
+| Term | Meaning here |
+|---|---|
+| **Organization** | The whole AWS Organizations structure: management account + OUs + member accounts + SCPs. You have one organization. |
+| **Management account** | The payer/admin account (`biznomy`). It owns the organization, SCPs and account vending. |
+| **OU (Organizational Unit)** | A policy folder inside the organization. `tenants` is an OU, **not** a tenant. |
+| **Member account** | An AWS account inside the organization. Each vended tenant is one member account. |
+| **Tenant** | The logical unit (project + environment) that maps to one member account. Current dev tenant = `digitalcompanion-dev`. |
+| **Project** | The product name, `digitalcompanion`; environments are `dev`/`prod`. |
+| **Vending control plane** | The API/scripts that create/tag/close member accounts. Not a tenant itself. |
+
+So: **organization** is the container; **`tenants` is the OU**; **`digitalcompanion-dev` is the
+tenant/member account** for the dev environment. Do not call the OU or the organization a tenant.
+
+---
+
 ## 1. Identities — two different emails
 
 | Identity | Purpose | Current value (local only) |
