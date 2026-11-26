@@ -1,3 +1,11 @@
+data "aws_cloudfront_cache_policy" "api_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "api_all_viewer" {
+  name = "Managed-AllViewer"
+}
+
 locals {
   name_prefix = var.tenant_name
   ssm_path    = "/digitalcompanion/${var.tenant_name}"
@@ -54,10 +62,12 @@ module "ec2_app" {
 module "cloudfront_api" {
   source = "../../modules/cloudfront-api"
 
-  name_prefix        = local.name_prefix
-  origin_domain_name = module.ec2_app.origin_domain_name
-  origin_port        = var.app_port
-  tags               = local.tags
+  name_prefix              = local.name_prefix
+  origin_domain_name       = module.ec2_app.origin_domain_name
+  origin_port              = var.app_port
+  cache_policy_id          = data.aws_cloudfront_cache_policy.api_disabled.id
+  origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api_all_viewer.id
+  tags                     = local.tags
 
   depends_on = [module.ec2_app]
 }
