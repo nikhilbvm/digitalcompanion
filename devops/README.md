@@ -21,6 +21,14 @@ devops/
 |---|---|---|
 | [ci.yml](../.github/workflows/ci.yml) | PR + main | install, lint, typecheck, test, build |
 | [docker-publish.yml](../.github/workflows/docker-publish.yml) | manual | build/push `api` or `agent` to GHCR |
+| [terraform-plan.yml](../.github/workflows/terraform-plan.yml) | PR/manual | fmt, validate and plan the tenant stack |
+| [terraform-apply.yml](../.github/workflows/terraform-apply.yml) | manual | fresh plan + apply with state lock |
+| [build-images.yml](../.github/workflows/build-images.yml) | main/manual | build/push ARM64 API+agent to tenant ECR |
+| [deploy-app.yml](../.github/workflows/deploy-app.yml) | manual | SSM deploy, migrations, health |
+| [deploy-web.yml](../.github/workflows/deploy-web.yml) | manual | S3 sync, CloudFront invalidation, smoke |
+
+The AWS workflows use the `digitalcompanion-dev` GitHub Environment, OIDC roles and repository
+variables; no AWS access keys or application secrets are stored in GitHub.
 
 The full strategy (versioning, environments, Part 2 architecture, rollback, observability) is in
 [docs/devops.md](../docs/devops.md).

@@ -1,0 +1,45 @@
+name: deploy-app
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag from build-images (for example v0.1.0-abc1234)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-app-digitalcompanion-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: digitalcompanion-dev
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy through SSM
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          TENANT_NAME: ${{ vars.TENANT_NAME }}
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          ARTIFACTS_BUCKET: ${{ vars.ARTIFACTS_BUCKET }}
+          INSTANCE_ID: ${{ vars.INSTANCE_ID }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEB_URL: ${{ vars.WEB_URL }}
+          TAG: ${{ inputs.tag }}
+        run: bash devops/tenancy/scripts/ci-deploy-app.sh
+
+      - name: Summary
+        run: echo "Deployed ${{ inputs.tag }} to digitalcompanion-dev." >> "$GITHUB_STEP_SUMMARY"

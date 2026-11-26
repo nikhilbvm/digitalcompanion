@@ -1,0 +1,70 @@
+name: terraform-plan
+
+on:
+  pull_request:
+    paths:
+      - "devops/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-plan-digitalcompanion-dev
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    # Fork PRs do not receive this repository's environment/OIDC credentials.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: digitalcompanion-dev
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: devops/terraform/stacks/digitalcompanion-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.17.2"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Format
+        working-directory: .
+        run: terraform fmt -check -recursive devops/terraform
+
+      - name: Init
+        run: |
+          terraform init -input=false -no-color \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=digitalcompanion/${{ vars.TENANT_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_LOCK_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Plan
+        run: |
+          terraform plan -input=false -no-color -out=tfplan
+          terraform show -no-color tfplan > plan.txt
+
+      - name: Upload plan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-digitalcompanion-dev
+          path: |
+            devops/terraform/stacks/digitalcompanion-dev/tfplan
+            devops/terraform/stacks/digitalcompanion-dev/plan.txt
+          if-no-files-found: ignore
+          retention-days: 7

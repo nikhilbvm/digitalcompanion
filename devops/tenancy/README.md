@@ -30,10 +30,11 @@ Applied:
   configured.
 - The static web build is live on S3/CloudFront; home/admin return 200, trailing-slash routing and
   the API CORS header are verified.
-- The CloudTrail baseline is not enabled yet.
+- The organization CloudTrail trail is logging; GitHub plan/build/deploy workflows are added, with
+  the first CI run pending.
 
 Next:
-- Enable CloudTrail and add the GitHub plan/build/deploy workflows (Phase 4).
+- Run the GitHub workflows once and record the first CI deploy.
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
 - Keep the POC synthetic-only and backup-free; add RDS/backups before real users.
 

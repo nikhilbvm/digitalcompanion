@@ -6,12 +6,20 @@ versions, no secrets in git, and deployment state recorded in git tags.**
 
 ---
 
-## 1. Current state (Part 1)
+## 1. Current state
 
 | Workflow | Trigger | What it does |
 |---|---|---|
 | [`ci.yml`](../.github/workflows/ci.yml) | PR + push to `main` | pnpm install, lint, typecheck, test, build, container builds, API `/health` + agent image smoke |
 | [`docker-publish.yml`](../.github/workflows/docker-publish.yml) | manual | build API or agent image, push to GHCR |
+| [`terraform-plan.yml`](../.github/workflows/terraform-plan.yml) | PR/manual | fmt, validate and plan the tenant stack |
+| [`terraform-apply.yml`](../.github/workflows/terraform-apply.yml) | manual | fresh plan + apply with state lock |
+| [`build-images.yml`](../.github/workflows/build-images.yml) | main/manual | ARM64 API/agent build and tenant ECR push |
+| [`deploy-app.yml`](../.github/workflows/deploy-app.yml) | manual | SSM deploy, migration, health |
+| [`deploy-web.yml`](../.github/workflows/deploy-web.yml) | manual | S3 sync, CloudFront invalidation, smoke |
+
+The AWS workflows assume the GitHub OIDC roles through the `digitalcompanion-dev` Environment. No
+AWS keys or application secrets are stored in GitHub; application secrets live in tenant SSM.
 
 CI needs no application secrets. Docker publishing uses `GITHUB_TOKEN` with `packages: write`.
 
@@ -168,15 +176,16 @@ aws cloudfront create-invalidation --distribution-id <id> --paths '/*'
 - Build with `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_LIVEKIT_URL` set; they are inlined.
 - No server is required; do not put `DATABASE_URL` or any server secret in this build environment.
 
-### Terraform layout (placeholder)
+### Terraform layout
 
-The active tenant/POC implementation plan is
-[planning/04-tenant-infrastructure.md](planning/04-tenant-infrastructure.md). It uses EC2 + Docker
-Compose + EBS Postgres, S3/CloudFront web, SSM secrets, per-tenant Terraform state, and GitHub
-plan/apply/deploy workflows.
+The active tenant/POC implementation is
+[planning/04-tenant-infrastructure.md](planning/04-tenant-infrastructure.md): EC2 + Docker Compose +
+EBS Postgres, S3/CloudFront web, SSM secrets, per-tenant Terraform state, and GitHub
+plan/apply/deploy workflows. The implemented modules and stack are under
+[`devops/terraform/`](../devops/terraform/); the tenant stack is applied and the post-apply plan is
+empty.
 
-[`devops/terraform/`](../devops/terraform/) currently contains a README only. Planned production
-modules:
+Production migration modules (not implemented yet):
 
 - `network` — VPC, subnets, security groups
 - `ecr` — repositories and lifecycle policy

@@ -1,6 +1,6 @@
 # Tenant infrastructure and deployment plan
 
-Status: **Phase 3 web deployed 2026-11-26** · web/API/agent/Postgres live; CloudTrail pending
+Status: **Phase 3 live, CloudTrail enabled, CI workflows added 2026-11-26** · first CI run pending
 
 Goal: provision and update the Digital Companion resources inside a tenant AWS account from code,
 with one-command local bootstrap and repeatable GitHub build/deploy pipelines, while keeping a dated
@@ -362,7 +362,8 @@ For every tenant:
 - The deploy workflow writes the same entry to the job summary and creates the deploy tag; it appends
   `AUDIT.md` through a bot commit to `main` (or an `audit/<tenant>` PR if `main` is protected). The
   operator reviews the entry, so the file is not silently rewritten.
-- CloudTrail organization trail is the authoritative AWS audit; enable in the tenant baseline phase.
+- CloudTrail organization trail is the authoritative AWS audit; it is enabled in the management
+  account and covers the tenant (activation date in the history log).
 - Budget alerts are direct email; add tenant-specific cost owner.
 
 No account IDs/emails in these public files; the local ops record/SSM/GitHub vars hold them.
@@ -375,9 +376,9 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 |---|---|---|
 | 0 | Approve this plan; choose TLS/domain, registry, secrets, database, compute, backups, CI roles, audit and deploy trigger | **done 2026-11-26** |
 | 1 | Backend bootstrap script + modules skeleton + `digitalcompanion-dev` stack + tenant `README`/`AUDIT`; `terraform plan` review | **plan generated: 47 to add, 0 to change/destroy; awaiting approval** |
-| 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | **app deployed: API/health + DB + guardrails + voice E2E 21/21; CloudTrail pending** |
+| 2 | Tenant baseline (CloudTrail) + apply infra (VPC/EC2/EBS/ECR/CloudFront/SG/IAM); push secrets; first API/agent/Postgres deploy | **done: app E2E 21/21; organization CloudTrail logging enabled** |
 | 3 | Web S3/CloudFront + full cloud E2E (text, voice, admin) | **web live: home/admin 200, routing/404 and CORS verified; backend E2E 21/21** |
-| 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | deploy via GitHub, audit entries |
+| 4 | GitHub OIDC workflows; move first deploy to CI; manual deploy gate, audit/tagging | **workflows added; first CI run/deploy pending** |
 | 5 | Alarms/runbook/close-recreate rehearsal; document production gates (RDS/backups, Secrets Manager rotation, custom domain, HA) | alarms and close/recreate rehearsed; gates documented |
 
 ---
@@ -435,6 +436,6 @@ No account IDs/emails in these public files; the local ops record/SSM/GitHub var
 - Add a custom domain/ACM, WAF, auth/consent/retention and HA before production.
 - Use a separate `digitalcompanion-prod` tenant and prod GitHub Environment with reviewers.
 
-Next: enable the CloudTrail tenant baseline, then add the GitHub plan/build/deploy workflows
-(Phase 4). The web, API, voice agent and Postgres are live; GitHub Environment variables are
-configured.
+Next: run the new GitHub plan/build/deploy workflows once, record the first CI deploy, then finish
+the close/recreate runbook rehearsal (Phase 5). The web, API, voice agent and Postgres are live;
+CloudTrail is logging; GitHub Environment variables are configured.

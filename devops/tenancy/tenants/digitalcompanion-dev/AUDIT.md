@@ -56,6 +56,18 @@ No account IDs, emails or secrets here.
 - No web build environment contains `DATABASE_URL` or server secrets.
 - CloudTrail remains the outstanding tenant-baseline item.
 
+## 2026-11-26 — CloudTrail and CI workflows
+
+- Enabled CloudTrail organization service access and created the multi-region organization trail
+  `dc-org-trail` in the management account. It logs to a private, versioned, encrypted S3 bucket with
+  log-file validation and 365-day lifecycle.
+- CloudTrail reports `IsLogging: true`; the first delivery can lag.
+- Added GitHub workflows for Terraform plan/apply, ARM64 image build, app deploy and web deploy.
+  They use the `digitalcompanion-dev` Environment, OIDC roles and repository variables; no AWS keys
+  or app secrets are stored in GitHub.
+- Added the missing `ssm:DescribeInstanceInformation` permission to the deploy role and applied it.
+- Terraform state serial: 6. First CI workflow run is pending.
+
 <!-- Template:
 ## YYYY-MM-DD — action
 Actor:

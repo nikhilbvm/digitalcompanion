@@ -185,6 +185,7 @@ resource "aws_iam_role_policy" "deploy" {
         Sid    = "SsmCommandStatus"
         Effect = "Allow"
         Action = [
+          "ssm:DescribeInstanceInformation",
           "ssm:GetCommandInvocation",
           "ssm:ListCommandInvocations"
         ]

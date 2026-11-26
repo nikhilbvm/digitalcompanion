@@ -1,0 +1,68 @@
+name: deploy-web
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-web-digitalcompanion-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: digitalcompanion-dev
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.34.9"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Build static web
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: pnpm --filter @companion/web build
+
+      - name: Upload and invalidate
+        env:
+          WEB_BUCKET: ${{ vars.WEB_BUCKET }}
+          WEB_CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.WEB_CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          aws s3 sync apps/web/out "s3://${WEB_BUCKET}" --delete --region "${{ vars.AWS_REGION }}"
+          invalidation=$(aws cloudfront create-invalidation \
+            --distribution-id "$WEB_CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths '/*' \
+            --query 'Invalidation.Id' --output text)
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$WEB_CLOUDFRONT_DISTRIBUTION_ID" \
+            --id "$invalidation"
+
+      - name: Smoke
+        env:
+          WEB_URL: ${{ vars.WEB_URL }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          curl -fsS "${WEB_URL}/" >/dev/null
+          curl -fsS "${WEB_URL}/admin/" >/dev/null
+          curl -fsS "${API_BASE_URL}/health"
+          echo
+          echo "Web deployed to $WEB_URL" >> "$GITHUB_STEP_SUMMARY"

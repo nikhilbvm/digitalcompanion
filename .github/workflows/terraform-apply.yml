@@ -1,0 +1,64 @@
+name: terraform-apply
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-apply-digitalcompanion-dev
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: digitalcompanion-dev
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: devops/terraform/stacks/digitalcompanion-dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.17.2"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init
+        run: |
+          terraform init -input=false -no-color \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=digitalcompanion/${{ vars.TENANT_NAME }}/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_LOCK_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Plan and apply
+        shell: bash
+        run: |
+          set +e
+          terraform plan -input=false -no-color -detailed-exitcode -out=tfplan
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "No infrastructure changes." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          elif [ "$code" -ne 2 ]; then
+            echo "terraform plan failed with exit code $code" >&2
+            exit "$code"
+          fi
+          terraform show -no-color tfplan | tee -a "$GITHUB_STEP_SUMMARY"
+          terraform apply -input=false -no-color tfplan
+          serial=$(terraform state pull | python3 -c 'import json,sys; print(json.load(sys.stdin).get("serial"))')
+          echo "Applied. Terraform state serial: $serial" | tee -a "$GITHUB_STEP_SUMMARY"

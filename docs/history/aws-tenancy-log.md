@@ -84,6 +84,17 @@ personal data in this public repo; keep those in the local ops record/password m
   header matches the web CloudFront origin.
 - No server secrets are present in the web build. CloudTrail baseline remains pending.
 
+## 2026-11-26 — CloudTrail and GitHub workflows
+
+- Enabled CloudTrail organization service access, then created `dc-org-trail` as a multi-region
+  organization trail with log-file validation. Logs go to a private, versioned, encrypted S3 bucket;
+  the trail reports logging enabled (first delivery may lag).
+- Added Terraform plan/apply, ARM64 image build, SSM app deploy and web deploy workflows. They use
+  the `digitalcompanion-dev` Environment and OIDC roles; no AWS keys or app secrets are in GitHub.
+- Added `ssm:DescribeInstanceInformation` to the deploy role and applied it. Terraform state serial:
+  6.
+- First CI run is pending; the production close/recreate rehearsal remains.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).
