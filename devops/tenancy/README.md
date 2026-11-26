@@ -25,13 +25,15 @@ Applied:
   `backend.hcl` is local-only.
 - Terraform POC modules and the `digitalcompanion-dev` stack are applied: 47 resources, post-apply
   plan is empty. EC2 bootstrap is healthy (Docker, `/data`, swap, CloudWatch agent, SSM).
-- No application containers, secrets or web build are deployed yet.
+- Secrets are in SSM; ARM64 API/agent images are in ECR; Postgres, API and agent are deployed via
+  SSM. Cloud E2E passed 21/21 including a dispatched voice greeting. GitHub Environment variables are
+  configured.
+- The static web build and CloudTrail baseline are not deployed yet.
 
 Next:
-- Add the tenant baseline (CloudTrail), push secrets, build/push arm64 images and deploy the first
-  API/agent/Postgres stack.
+- Deploy the static web build (Phase 3) and enable CloudTrail.
 - Build the internal `create/close/recreate tenant` scripts and the vending control plane.
-- Deploy the static web build ([tenant infrastructure plan](../../docs/planning/04-tenant-infrastructure.md)).
+- Add the GitHub plan/build/deploy workflows (Phase 4).
 
 No account IDs, root credentials, personal emails or secrets live in this public repo.
 

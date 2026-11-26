@@ -29,6 +29,24 @@ No account IDs, emails or secrets here.
   files are deployed yet. Expected.
 - CloudTrail tenant baseline, secrets, images and the first app deploy remain pending.
 
+## 2026-11-26 — first application deployment
+
+- Pushed the required provider keys and a generated Postgres password to tenant SSM SecureStrings.
+- Built and pushed ARM64 API/agent images to tenant ECR, tag `v0.1.0-b0e0eeb`.
+- Deployed through SSM: rendered `/opt/digitalcompanion/.env`, logged in to ECR, pulled images, ran
+  `0001_init.sql`, and started Postgres, API and agent.
+- API `/health` through CloudFront reports `llm`, `database`, `deepgram` and `livekit` configured.
+  The agent registered with LiveKit as worker `dc`.
+- Cloud E2E against the deployed API/Postgres passed **21/21**, including text chat, guardrails,
+  masking, emergency handling, Deepgram TTS, LiveKit dispatch and a real voice greeting. Synthetic
+  test rows were removed afterward.
+- Postgres is bound to host loopback only for SSM maintenance/backups; the SG still permits only
+  CloudFront to port 4000. The local dev stack was stopped to prevent its same-named LiveKit worker
+  from receiving cloud dispatches.
+- GitHub Environment `digitalcompanion-dev` variables were configured from outputs; values are kept
+  locally in the gitignored `.secrets/` file.
+- Static web deployment and CloudTrail remain pending. POC data is synthetic-only with no backups.
+
 <!-- Template:
 ## YYYY-MM-DD — action
 Actor:

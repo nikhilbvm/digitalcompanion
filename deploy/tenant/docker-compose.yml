@@ -8,6 +8,9 @@ services:
       POSTGRES_DB: digitalcompanion
     volumes:
       - pgdata:/var/lib/postgresql/data
+    # Loopback only for SSM port-forwarded maintenance/backups; never public.
+    ports:
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U companion -d digitalcompanion"]
       interval: 5s

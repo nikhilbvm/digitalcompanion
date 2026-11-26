@@ -63,6 +63,19 @@ personal data in this public repo; keep those in the local ops record/password m
 - API CloudFront is 504 and web is 403 until the first app/web deployment. CloudTrail, secrets and
   containers remain pending.
 
+## 2026-11-26 — first app deployment and cloud E2E
+
+- Pushed SSM secrets, built/pushed ARM64 images (`v0.1.0-b0e0eeb`), and deployed Postgres/API/agent
+  via SSM. Migrations applied through the one-shot `migrate` service.
+- API health through CloudFront is green for LLM, database, Deepgram and LiveKit; the voice worker
+  registered as `dc`.
+- Cloud E2E passed 21/21, including text guardrails/masking, emergency handling, Deepgram TTS,
+  LiveKit dispatch and a real voice greeting. Temporary test rows were cleaned up.
+- Stopped the local `pnpm dev` stack during the voice test because its same-named LiveKit worker was
+  receiving cloud dispatches; it can be restarted for local work.
+- Postgres is loopback-bound for SSM maintenance only. Static web and CloudTrail baseline are the
+  remaining Phase 2/3 items.
+
 ## Pending actions
 
 - [x] Budget alerts use direct email; SNS topic deleted (no confirmation needed).

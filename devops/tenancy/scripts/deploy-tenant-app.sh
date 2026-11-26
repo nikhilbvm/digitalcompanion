@@ -7,6 +7,7 @@
 #     bash devops/tenancy/scripts/deploy-tenant-app.sh
 set -euo pipefail
 
+export AWS_PROFILE="${PROFILE:-dc-tenant-dev}"
 PROFILE="${PROFILE:-dc-tenant-dev}"
 TENANT="${TENANT:-digitalcompanion-dev}"
 REGION="${REGION:-us-east-1}"
