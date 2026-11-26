@@ -54,7 +54,7 @@ The script creates a temporary person and checks:
 Exit code 0 means everything passed. The script prints each `PASS` / `FAIL` line.
 
 > The voice check requires the worker to be running. If it times out, confirm `pnpm dev` shows
-> `registered worker` with `agentName: "dc"` and that `AGENT_NAME=dc` in `.env`.
+> `registered worker` with `agentName: "dc-local"` and that `AGENT_NAME=dc-local` in `.env`.
 
 ---
 
@@ -145,7 +145,7 @@ added.
 | `pnpm e2e` health fails | `pnpm dev` running; `./devops/scripts/check-env.sh` |
 | `configured.llm:false` | `OPENROUTER_API_KEY` (or `ANTHROPIC_API_KEY` when direct) |
 | `configured.database:false` | `DATABASE_URL`, `pnpm db:up` |
-| voice check times out | worker log `registered worker` with `agentName: "dc"`; `AGENT_NAME=dc`; LiveKit keys |
+| voice check times out | worker log `registered worker` with `agentName: "dc-local"`; `AGENT_NAME=dc-local`; LiveKit keys |
 | classification degraded | OpenRouter key/rate limit; patterns still work |
 | no greeting | worker not dispatched, LiveKit credentials, TTS key |
 | card digits in DB | bug — investigate `Store.addMessage`/`Recorder` masking before continuing |

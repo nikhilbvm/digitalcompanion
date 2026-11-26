@@ -13,7 +13,12 @@ if ! command -v pnpm >/dev/null 2>&1; then
   exit 1
 fi
 
+# Keep the local worker separate from the deployed tenant worker (`dc`).
+# An explicitly exported AGENT_NAME still wins; .env is not allowed to override it.
+export AGENT_NAME="${AGENT_NAME:-dc-local}"
+
 echo "Starting web (:3000), api (:4000) and the LiveKit agent worker."
+echo "Local worker name: ${AGENT_NAME} (the cloud tenant uses dc)."
 echo "The agent exits early if LiveKit/Deepgram/DATABASE_URL keys are missing; web + api keep running."
 echo
 
